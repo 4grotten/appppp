@@ -1,5 +1,6 @@
 from typing import Union
-
+from django.db.models import Sum, Value, Q
+from django.db.models.functions import Coalesce
 from django.contrib.postgres.fields import ArrayField
 from django.db.models import (
     BooleanField,
@@ -162,6 +163,9 @@ class ShopItemService:
             if not can_see_own_unpublished:
                 queryset = queryset.exclude(is_published=False)
 
+        queryset = queryset.annotate(
+            annotated_total_stock=Coalesce(Sum('shop_item_size_counts__count'), Value(0))
+        )
         return queryset.distinct()
 
     @classmethod

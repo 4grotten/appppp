@@ -789,13 +789,13 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(Assistant)
 class AssistantAdmin(admin.ModelAdmin):
-    list_display = ("id", "organization", "name")
+    list_display = ("id", "organization", "name","voice_assistant_id")
     search_fields = ("name",)
 
 
 @admin.register(UserAssistant)
 class UserAssistantAdmin(admin.ModelAdmin):
-    list_display = ("id", "assistant", "user", "active_until")
+    list_display = ("id", "assistant", "user", "active_until","is_voice_assistant")
     search_fields = (
         "assistant",
         "user",

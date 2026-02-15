@@ -20,7 +20,7 @@ from rest_framework.filters import SearchFilter
 logger = logging.getLogger(__name__)
 
 from common.exceptions import NotAcceptableException
-from organizations.models import Answer, AnswerFile, Assistant, Chat, ChatSource, Plan, Question
+from organizations.models import Answer, AnswerFile, Assistant, Chat, ChatSource, Plan, Question, UserAssistant
 from messenger_bots.models import BotChat, BotPlatform
 from organizations.serializers.assistant_serializers import (
     AnswerFileSerializer,
@@ -450,16 +450,40 @@ class AssistantChatReadMessages(APIView):
 
 
 class GetElevenLabsSignedUrlView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, chat_id):
-
-        agent_id = "agent_3801kfxppx4kf8vvpg5xthybyz3f"
-
-        AI_SERVER_URL = "http://161.35.153.151:8080/bot/api/proxy/elevenlabs/signed-url/"
-
         try:
-            logger.info(f"Proxying signed URL request to AI Server for chat {chat_id}")
+            user_assistant = UserAssistant.objects.filter(id=chat_id).first()
+
+            if not user_assistant:
+                logger.error(f"UserAssistant with ID {chat_id} not found")
+                return Response({"error": f"UserAssistant {chat_id} not found"}, status=404)
+
+            if not user_assistant.is_voice_assistant:
+                logger.warning(f"UserAssistant {chat_id} has is_voice_assistant=False")
+                return Response({"error": "This assistant is not marked as a voice assistant"}, status=403)
+
+            assistant_obj = user_assistant.assistant
+
+            if not assistant_obj:
+                logger.error(f"UserAssistant {chat_id} has no linked Assistant record")
+                return Response({"error": "Linked Assistant model not found"}, status=400)
+
+            logger.info(f"Checking Assistant ID: {assistant_obj.id}, Voice ID: '{assistant_obj.voice_assistant_id}'")
+
+            agent_id = assistant_obj.voice_assistant_id
+            if not agent_id:
+                logger.error(f"Assistant {assistant_obj.id} has empty voice_assistant_id in DB")
+                return Response({
+                    "error": "Voice Assistant ID is not configured in settings",
+                    "debug_info": {
+                        "assistant_id": assistant_obj.id,
+                        "user_assistant_id": user_assistant.id
+                    }
+                }, status=400)
+
+            AI_SERVER_URL = "http://161.35.153.151:8080/bot/api/proxy/elevenlabs/signed-url/"
 
             response = requests.get(
                 AI_SERVER_URL,
@@ -474,14 +498,11 @@ class GetElevenLabsSignedUrlView(APIView):
                     "agent_id": agent_id
                 })
             else:
-                logger.error(f"AI Server returned error: {response.text}")
-                return Response({"error": "AI Server could not get token"}, status=502)
+                return Response({"error": "AI Server error", "details": response.text}, status=502)
 
         except Exception as e:
-            logger.error(f"Failed to connect to AI Server: {e}")
-            return Response({"error": "AI Server unavailable"}, status=503)
-        
-
+            logger.error(f"Error in GetElevenLabsSignedUrlView: {str(e)}")
+            return Response({"error": str(e)}, status=500)
         
 from project.settings.base import ELEVENLABS_API_KEY2
 

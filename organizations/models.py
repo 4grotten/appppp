@@ -1244,6 +1244,7 @@ class Assistant(TimestampModel):
     first_message = models.CharField(max_length=500, null=True, blank=True)
     ai_voice = models.CharField(max_length=255, null=True, blank=True)
     voice_name = models.CharField(max_length=255, null=True, blank=True)
+    voice_assistant_id = models.CharField(max_length=255, null=True, blank=True, help_text="id агента")
 
     def __str__(self):
         return f"Assistant {self.name} of {self.organization} organization"
@@ -1334,6 +1335,7 @@ class UserAssistant(TimestampModel):
     plans = models.ManyToManyField(Plan, blank=True, related_name="user_assistants")
     is_active = models.BooleanField(default=False)
     active_until = models.DateTimeField(null=True, blank=True)
+    is_voice_assistant = models.BooleanField(default=False)
     transaction = models.OneToOneField(
         "transactions.Transaction",
         on_delete=models.SET_NULL,

@@ -42,7 +42,11 @@ def sync_assistant_to_ai_server(sender, instance, **kwargs):
     def send_request():
         training_data = CommentService.get_training_data(instance)
 
-        agent_id = "agent_3801kfxppx4kf8vvpg5xthybyz3f"
+        agent_id = instance.voice_assistant_id
+
+        if not agent_id:
+            print("Assistant has no voice_assistant_id. Skipping sync.")
+            return
 
         url = "http://161.35.153.151:8080/bot/sync-agent/"
         payload = {

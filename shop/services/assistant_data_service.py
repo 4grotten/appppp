@@ -23,24 +23,21 @@ class AssistantDataService:
         return f"{safe_title}_{organization.id}.json"
 
     @classmethod
-    def _get_storage_path(cls, organization):
-
-        filename = cls._get_filename(organization)
-        return f"{cls.FOLDER_NAME}/{filename}"
-    
-    @classmethod
     def get_file_url(cls, organization):
-
+        """
+        Возвращает публичный URL файла из S3 через модель Assistant.
+        """
         if not cls.is_assistant_active(organization):
             return None
-        
-        path = cls._get_storage_path(organization)
-        
-        if default_storage.exists(path):
-            return default_storage.url(path)
-            
-        return None
 
+        try:
+            assistant = organization.assistant
+            if assistant.catalog_file:
+                return assistant.catalog_file.url
+        except Assistant.DoesNotExist:
+            return None
+
+        return None
 
     @classmethod
     def is_assistant_active(cls, organization):
@@ -52,24 +49,26 @@ class AssistantDataService:
         if not assistant.is_enabled:
             return False
 
-        active_subscription = UserAssistant.objects.filter(
+        return UserAssistant.objects.filter(
             assistant=assistant,
             is_active=True,
-            # active_until__gt=timezone.now()
+            # active_until__gt=timezone.now() # Раскомментируйте, если нужно проверять дату
         ).exists()
-
-        return active_subscription
 
     @classmethod
     def update_organization_json(cls, organization):
-
-        path = cls._get_storage_path(organization)
+        """
+        Генерирует JSON и сохраняет его в поле catalog_file модели Assistant.
+        """
+        try:
+            assistant = organization.assistant
+        except Assistant.DoesNotExist:
+            return
 
         if not cls.is_assistant_active(organization):
-            if default_storage.exists(path):
-                default_storage.delete(path)
+            cls.delete_organization_json(organization)
             return
-        
+
         items = ShopItem.objects.filter(
             organization=organization,
             is_published=True,
@@ -77,10 +76,9 @@ class AssistantDataService:
             organization__is_active=True,
             organization__is_deleted=False
         ).select_related('currency', 'subcategory')
-        
+
         data_list = []
         for item in items:
-
             item_data = {
                 "id": item.id,
                 "name": item.name,
@@ -94,24 +92,24 @@ class AssistantDataService:
             }
             data_list.append(item_data)
 
-
         json_str = json.dumps(data_list, ensure_ascii=False, indent=2)
         file_content = ContentFile(json_str.encode('utf-8'))
+        filename = cls._get_filename(organization)
 
-        if default_storage.exists(path):
-            default_storage.delete(path)
-        
+        if assistant.catalog_file:
+            assistant.catalog_file.delete(save=False)
 
-        default_storage.save(path, file_content)
-        print(f"✅ S3 JSON updated: {path}")
+        assistant.catalog_file.save(filename, file_content, save=True)
+        print(f"✅ S3 JSON updated via Assistant model: {filename}")
 
     @classmethod
     def delete_organization_json(cls, organization):
-
-        path = cls._get_storage_path(organization)
-
-        if default_storage.exists(path):
-            default_storage.delete(path)
+        try:
+            assistant = organization.assistant
+            if assistant.catalog_file:
+                assistant.catalog_file.delete(save=True)
+        except Assistant.DoesNotExist:
+            pass
 
 # @classmethod
 #     def delete_json(cls, organization):

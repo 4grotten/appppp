@@ -1960,6 +1960,7 @@ class PinnOrganizationView(APIView):
 
 class OrganizationCatalogApiView(RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = OrganizationCatalogSerializer
 
     def get_object(self):
         return get_object_or_404(

@@ -121,7 +121,7 @@ services:
     restart: always
 
   waha:
-    image: devlikeapro/waha-plus:noweb
+    image: devlikeapro/waha-plus:latest
     container_name: appofiz_waha_prod
     restart: unless-stopped
     dns:

@@ -1246,6 +1246,13 @@ class Assistant(TimestampModel):
     voice_name = models.CharField(max_length=255, null=True, blank=True)
     voice_assistant_id = models.CharField(max_length=255, null=True, blank=True, help_text="id агента")
 
+    catalog_file = models.FileField(
+        upload_to="assistants_data",
+        null=True,
+        blank=True,
+        help_text="JSON файл с каталогом товаров"
+    )
+
     def __str__(self):
         return f"Assistant {self.name} of {self.organization} organization"
 

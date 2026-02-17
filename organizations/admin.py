@@ -12,6 +12,7 @@ from django.urls import path
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from mapwidgets.widgets import GooglePointFieldWidget
+from django.utils.safestring import mark_safe 
 
 from common.utils import DecimalDecoder, DecimalEncoder
 from organizations.constants import SUBSCRIPTION_STATUS
@@ -183,6 +184,16 @@ class OrganizationPaymentSystemUsersInLine(admin.TabularInline):
     model = OrganizationPaymentSystemUsers
     extra = 1
 
+class AssistantInline(admin.StackedInline):
+    model = Assistant
+    extra = 0
+    fields = ("organization", "name", "get_html_photo", "gender",  "position", "is_enabled", "ai_prompt", "first_message", "ai_voice", "voice_name", "voice_assistant_id")
+    readonly_fields = ('get_html_photo',)
+
+    def get_html_photo(self, obj):
+        if obj.image and obj.image.small:
+            return mark_safe(f'<img src="{obj.image.small.url}" style="max-width: 200px; max-height: 200px;" />')
+    get_html_photo.short_description = "Превью"
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
@@ -227,6 +238,8 @@ class OrganizationAdmin(admin.ModelAdmin):
         OrganizationVerificationUsersInLine,
         OrganizationPaymentSystemUsersInLine,  # 2:18
         MembershipInLine,
+        AssistantInline,
+
     )
     fieldsets = (
         (
@@ -790,6 +803,7 @@ class QuestionAdmin(admin.ModelAdmin):
 @admin.register(Assistant)
 class AssistantAdmin(admin.ModelAdmin):
     list_display = ("id", "organization", "name","voice_assistant_id")
+
     search_fields = ("name",)
 
 

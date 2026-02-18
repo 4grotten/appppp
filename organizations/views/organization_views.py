@@ -141,6 +141,7 @@ from organizations.tasks import (
 from shop.filters import FeedItemFilter, FeedItemOrderingFilter
 from shop.models import ShopItem
 from shop.serializers.item_serializers import ItemFeedSerializer
+from shop.services.assistant_data_service import AssistantDataService
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
 from users.serializers import FollowerOrClientSerializer, UserShortInfoSerializer
@@ -1960,6 +1961,7 @@ class PinnOrganizationView(APIView):
 
 class OrganizationCatalogApiView(RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = OrganizationCatalogSerializer
 
     def get_object(self):
         return get_object_or_404(
@@ -1971,8 +1973,15 @@ class OrganizationCatalogApiView(RetrieveUpdateAPIView):
     def update(self, request, *args, **kwargs):
         organization = self.get_object()
 
-        organization.is_catalog = not organization.is_catalog
+        new_status = not organization.is_catalog
+        organization.is_catalog = new_status
         organization.save(update_fields=["is_catalog"])
+
+        if new_status:
+            AssistantDataService.update_organization_json(organization)
+        else:
+
+            AssistantDataService.delete_organization_json(organization)
 
         return Response(
             {

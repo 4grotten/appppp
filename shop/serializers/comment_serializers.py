@@ -397,6 +397,8 @@ def _get_product_data_by_id(item_id):
     """Helper function to get product data by ID."""
     item = ShopItem.objects.filter(id=item_id).select_related(
         'currency',
+        'organization',
+        'organization__currency',
         'subcategory',
         'subcategory__category'
     ).prefetch_related(
@@ -424,12 +426,18 @@ def _get_product_data_by_id(item_id):
                 else:
                     media_urls.append(vid.thumbnail.file.url)
 
+        currency_code = "KGS"
+        if item.currency:
+            currency_code = item.currency.code
+        elif item.organization and item.organization.currency:
+            currency_code = item.organization.currency.code
+
         return {
             "id": item.id,
             "name": item.name,
             "price": float(item.price) if item.price else None,
             "discount_price": float(item.discounted_price) if item.discounted_price else "",
-            "currency": item.currency.code if item.currency else "KGS",
+            "currency": currency_code,
             "description": item.description,
             "category": item.subcategory.category.name if item.subcategory and item.subcategory.category else None,
             "subcategory": item.subcategory.name if item.subcategory else None,

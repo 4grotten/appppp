@@ -7,10 +7,13 @@ from messenger.models import (
     ChatMessage,
 )
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Exists, OuterRef, Subquery, DateTimeField, Value
+from django.db.models import Exists, OuterRef, Subquery, DateTimeField, Value, IntegerField
 from django.db.models.functions import Coalesce, Greatest
 from django.utils import timezone
 from users.models import User
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class MessengerChatService:
@@ -33,7 +36,10 @@ class MessengerChatService:
 
     @classmethod
     def sort_by(cls, queryset, sort_by: str, user=None):
+        logger.info(f"[MESSENGER_FILTER] sort_by={sort_by}, queryset_count_before={queryset.count()}")
+        
         if sort_by == "new":
+            logger.info(f"[MESSENGER_FILTER] Applying 'new' filter")
             last_message_subquery = (
                 ChatMessage.objects.filter(chat=OuterRef("pk"))
                 .order_by("-created_at")
@@ -65,26 +71,36 @@ class MessengerChatService:
                     ),
                 ),
             ).order_by("-latest_activity", "-created_at")
+            logger.info(f"[MESSENGER_FILTER] 'new' filter applied. Count after: {queryset.count()}")
 
         elif sort_by == "unread" and user:
-            unread_subquery = ChatMessage.objects.filter(
-                chat=OuterRef("pk"),
-                is_read=False,
-            )
-            queryset = queryset.annotate(has_unread=Exists(unread_subquery)).order_by(
-                "-has_unread", "-created_at"
-            )
+            logger.info(f"[MESSENGER_FILTER] Applying 'unread' filter for user={user.id}")
+            queryset = queryset.filter(
+                messages__is_read=False,
+                messages__sender__is_active=True
+            ).exclude(
+                messages__sender=user
+            ).distinct().order_by("-created_at")
+            logger.info(f"[MESSENGER_FILTER] 'unread' filter applied. Count after: {queryset.count()}")
 
         elif sort_by == "blocked" and user:
-            queryset = queryset.annotate(
-                is_blockeds=Exists(
-                    BlockedChat.objects.filter(chat=OuterRef("pk"), blocked_by=user)
-                )
-            ).order_by("-is_blockeds", "-created_at")
+            logger.info(f"[MESSENGER_FILTER] Applying 'blocked' filter for user={user.id}")
+            queryset = queryset.filter(
+                blockedchat__blocked_by=user
+            ).distinct().order_by("-created_at")
+            logger.info(f"[MESSENGER_FILTER] 'blocked' filter applied. Count after: {queryset.count()}")
+
+        elif sort_by == "groups":
+            logger.info(f"[MESSENGER_FILTER] Applying 'groups' filter")
+            queryset = queryset.filter(chat_type="group").distinct().order_by("-created_at")
+            logger.info(f"[MESSENGER_FILTER] 'groups' filter applied. Count after: {queryset.count()}")
 
         else:
+            logger.info(f"[MESSENGER_FILTER] No specific filter, applying default sort")
             queryset = queryset.order_by("-created_at")
+            logger.info(f"[MESSENGER_FILTER] Default sort applied. Count: {queryset.count()}")
 
+        logger.info(f"[MESSENGER_FILTER] Final queryset count for sort_by={sort_by}: {queryset.count()}")
         return queryset
 
 

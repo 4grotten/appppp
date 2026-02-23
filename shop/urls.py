@@ -34,6 +34,7 @@ from shop.views.item_views import (
     OrganizationResumeRequestRetrieveView, OrganizationAcceptResumeRequestView, OrganizationDeclineResumeRequestView,
     UserResumesView, SuggestSearchResume
 )
+from shop.views.export_views import DownloadOrganizationCatalogExcelView
 
 urlpatterns = [
     path('shop/categories/', ItemCategoryListView.as_view(), name='item_categories'),
@@ -158,5 +159,7 @@ urlpatterns = [
     path('comments/change/upload_theme_image/', UploadUserThemeImageView.as_view(),
          name='comment_upload_theme_image'),
 
-    path('partner_shop_items/<int:pk>/', PartnerShopItemsListView.as_view(), name='partner_shop_items')
+    path('partner_shop_items/<int:pk>/', PartnerShopItemsListView.as_view(), name='partner_shop_items'),
+    path('shop/organizations/<int:pk>/download_catalog_excel/', DownloadOrganizationCatalogExcelView.as_view(),
+         name='download_organization_catalog_excel')
 ]

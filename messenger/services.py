@@ -7,10 +7,13 @@ from messenger.models import (
     ChatMessage,
 )
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Exists, OuterRef, Subquery, DateTimeField, Value
+from django.db.models import Exists, OuterRef, Subquery, DateTimeField, Value, IntegerField
 from django.db.models.functions import Coalesce, Greatest
 from django.utils import timezone
 from users.models import User
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class MessengerChatService:
@@ -33,6 +36,8 @@ class MessengerChatService:
 
     @classmethod
     def sort_by(cls, queryset, sort_by: str, user=None):
+        logger.info(f"[MESSENGER_FILTER] sort_by={sort_by}, queryset_count_before={queryset.count()}")
+        
         if sort_by == "new":
             last_message_subquery = (
                 ChatMessage.objects.filter(chat=OuterRef("pk"))
@@ -80,11 +85,14 @@ class MessengerChatService:
             ).distinct().order_by("-created_at")
 
         elif sort_by == "groups":
+            logger.info(f"[MESSENGER_FILTER] Applying groups filter. Count before: {queryset.count()}")
             queryset = queryset.filter(chat_type="group").distinct().order_by("-created_at")
+            logger.info(f"[MESSENGER_FILTER] Groups filter applied. Count after: {queryset.count()}")
 
         else:
             queryset = queryset.order_by("-created_at")
 
+        logger.info(f"[MESSENGER_FILTER] Final queryset count for sort_by={sort_by}: {queryset.count()}")
         return queryset
 
 

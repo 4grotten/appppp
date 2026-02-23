@@ -104,6 +104,11 @@ class CommentService:
         answers = Answer.objects.filter(assistant=assistant)
         org = Organization.objects.get(assistant=assistant)
         catalog_url = AssistantDataService.get_file_url(assistant.organization)
+        
+        logger.info(
+            f"[TRAINING_DATA] Preparing training data for assistant={assistant.id}, "
+            f"org_id={org.id}, catalog_url={catalog_url}"
+        )
         organization_info = {
             "name": org.title,
             "description": org.description or "",
@@ -178,6 +183,11 @@ class CommentService:
                 "files_to_send": files_to_send  
             })
 
+        logger.info(
+            f"[TRAINING_DATA] Completed training data for assistant={assistant.id}: "
+            f"catalog_url={catalog_url}, "
+            f"answers_count={len(training_data['answers'])}"
+        )
         return training_data
 
     @classmethod

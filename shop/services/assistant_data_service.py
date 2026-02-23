@@ -120,7 +120,7 @@ class AssistantDataService:
         logger.info(f"✅ Catalog JSON updated for {organization.title} (ID: {organization.id})")
         logger.info(f"   📁 Filename: {filename}")
         logger.info(f"   🔗 URL: {file_url}")
-        print(f"✅ S3 JSON updated via Assistant model: {filename}")
+        print(f"✅ S3 JSON updated via: {filename}")
 
     @classmethod
     def delete_organization_json(cls, organization):

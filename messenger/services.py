@@ -80,7 +80,7 @@ class MessengerChatService:
             ).distinct().order_by("-created_at")
 
         elif sort_by == "groups":
-            queryset = queryset.filter(chat_type="group").order_by("-created_at")
+            queryset = queryset.filter(chat_type="group").distinct().order_by("-created_at")
 
         else:
             queryset = queryset.order_by("-created_at")

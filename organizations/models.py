@@ -264,6 +264,18 @@ class Organization(TimestampModel):
 
     switcher = models.CharField(max_length=20, choices=SWITCHER_TYPE, default=WEB)
     is_catalog = models.BooleanField(default=True,null=True, blank=True)
+    catalog_file = models.FileField(
+        upload_to="assistants_data",
+        null=True,
+        blank=True,
+        help_text="JSON файл с каталогом товаров",
+    )
+    catalog_excel_file = models.FileField(
+        upload_to="assistants_data/exports",
+        null=True,
+        blank=True,
+        help_text="Excel файл с каталогом товаров",
+    )
 
     objects = OrganizationManager()
     active_organizations = ActiveOrganizationManager()
@@ -1251,6 +1263,12 @@ class Assistant(TimestampModel):
         null=True,
         blank=True,
         help_text="JSON файл с каталогом товаров"
+    )
+    catalog_excel_file = models.FileField(
+        upload_to="assistants_data/exports",
+        null=True,
+        blank=True,
+        help_text="Excel файл с каталогом товаров"
     )
 
     def __str__(self):

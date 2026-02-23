@@ -67,20 +67,20 @@ class MessengerChatService:
             ).order_by("-latest_activity", "-created_at")
 
         elif sort_by == "unread" and user:
-            unread_subquery = ChatMessage.objects.filter(
-                chat=OuterRef("pk"),
-                is_read=False,
-            )
-            queryset = queryset.annotate(has_unread=Exists(unread_subquery)).order_by(
-                "-has_unread", "-created_at"
-            )
+            queryset = queryset.filter(
+                messages__is_read=False,
+                messages__sender__is_active=True
+            ).exclude(
+                messages__sender=user
+            ).distinct().order_by("-created_at")
 
         elif sort_by == "blocked" and user:
-            queryset = queryset.annotate(
-                is_blockeds=Exists(
-                    BlockedChat.objects.filter(chat=OuterRef("pk"), blocked_by=user)
-                )
-            ).order_by("-is_blockeds", "-created_at")
+            queryset = queryset.filter(
+                blockedchat__blocked_by=user
+            ).distinct().order_by("-created_at")
+
+        elif sort_by == "groups":
+            queryset = queryset.filter(chat_type="group").order_by("-created_at")
 
         else:
             queryset = queryset.order_by("-created_at")

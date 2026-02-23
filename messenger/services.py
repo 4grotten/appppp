@@ -90,10 +90,10 @@ class MessengerChatService:
             ).distinct().order_by("-created_at")
             print(f">>> [MESSENGER_FILTER] 'blocked' filter applied")
 
-        elif sort_by == "groups":
-            print(f">>> [MESSENGER_FILTER] Applying 'groups' filter")
+        elif sort_by == "group":
+            print(f">>> [MESSENGER_FILTER] Applying 'group' filter")
             queryset = queryset.filter(chat_type="group").distinct().order_by("-created_at")
-            print(f">>> [MESSENGER_FILTER] 'groups' filter applied")
+            print(f">>> [MESSENGER_FILTER] 'group' filter applied")
 
         else:
             print(f">>> [MESSENGER_FILTER] No specific filter, applying default sort")

@@ -36,10 +36,10 @@ class MessengerChatService:
 
     @classmethod
     def sort_by(cls, queryset, sort_by: str, user=None):
-        logger.info(f"[MESSENGER_FILTER] sort_by={sort_by}, queryset_count_before={queryset.count()}")
+        print(f">>> [MESSENGER_FILTER] sort_by={sort_by}")
         
         if sort_by == "new":
-            logger.info(f"[MESSENGER_FILTER] Applying 'new' filter")
+            print(f">>> [MESSENGER_FILTER] Applying 'new' filter")
             last_message_subquery = (
                 ChatMessage.objects.filter(chat=OuterRef("pk"))
                 .order_by("-created_at")
@@ -71,36 +71,36 @@ class MessengerChatService:
                     ),
                 ),
             ).order_by("-latest_activity", "-created_at")
-            logger.info(f"[MESSENGER_FILTER] 'new' filter applied. Count after: {queryset.count()}")
+            print(f">>> [MESSENGER_FILTER] 'new' filter applied")
 
         elif sort_by == "unread" and user:
-            logger.info(f"[MESSENGER_FILTER] Applying 'unread' filter for user={user.id}")
+            print(f">>> [MESSENGER_FILTER] Applying 'unread' filter for user={user.id}")
             queryset = queryset.filter(
                 messages__is_read=False,
                 messages__sender__is_active=True
             ).exclude(
                 messages__sender=user
             ).distinct().order_by("-created_at")
-            logger.info(f"[MESSENGER_FILTER] 'unread' filter applied. Count after: {queryset.count()}")
+            print(f">>> [MESSENGER_FILTER] 'unread' filter applied")
 
         elif sort_by == "blocked" and user:
-            logger.info(f"[MESSENGER_FILTER] Applying 'blocked' filter for user={user.id}")
+            print(f">>> [MESSENGER_FILTER] Applying 'blocked' filter for user={user.id}")
             queryset = queryset.filter(
                 blockedchat__blocked_by=user
             ).distinct().order_by("-created_at")
-            logger.info(f"[MESSENGER_FILTER] 'blocked' filter applied. Count after: {queryset.count()}")
+            print(f">>> [MESSENGER_FILTER] 'blocked' filter applied")
 
-        elif sort_by == "groups":
-            logger.info(f"[MESSENGER_FILTER] Applying 'groups' filter")
+        elif sort_by == "group":
+            print(f">>> [MESSENGER_FILTER] Applying 'group' filter")
             queryset = queryset.filter(chat_type="group").distinct().order_by("-created_at")
-            logger.info(f"[MESSENGER_FILTER] 'groups' filter applied. Count after: {queryset.count()}")
+            print(f">>> [MESSENGER_FILTER] 'group' filter applied")
 
         else:
-            logger.info(f"[MESSENGER_FILTER] No specific filter, applying default sort")
+            print(f">>> [MESSENGER_FILTER] No specific filter, applying default sort")
             queryset = queryset.order_by("-created_at")
-            logger.info(f"[MESSENGER_FILTER] Default sort applied. Count: {queryset.count()}")
+            logger.info(f"[MESSENGER_FILTER] Default sort applied.")
 
-        logger.info(f"[MESSENGER_FILTER] Final queryset count for sort_by={sort_by}: {queryset.count()}")
+        print(f">>> [MESSENGER_FILTER] sort_by={sort_by} completed")
         return queryset
 
 

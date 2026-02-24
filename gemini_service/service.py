@@ -1,4 +1,5 @@
 import io
+import traceback
 
 import httpx
 from fastapi import UploadFile
@@ -78,9 +79,15 @@ class GeminiAIService:
         cls, item_images, background_images, request: GeminiAICreateImage
     ):
         try:
+            print("[GEMINI][generate_from_prompt] START")
             max_retries = 3
             images = list()
             background_images = background_images
+            print(
+                f"[GEMINI][generate_from_prompt] item_images={len(item_images) if item_images else 0}, "
+                f"background_images={len(background_images) if background_images else 0}, "
+                f"aspect_ratio={getattr(request, 'aspect_ratio', None)}"
+            )
 
             images_prompt = []
             if background_images:
@@ -88,14 +95,26 @@ class GeminiAIService:
             if item_images:
                 images += item_images
             if images:
-                for file in images:
+                for idx, file in enumerate(images, start=1):
                     try:
+                        print(
+                            f"[GEMINI][generate_from_prompt] reading image {idx}/{len(images)}: "
+                            f"filename={getattr(file, 'filename', 'unknown')}"
+                        )
                         image_bytes = await file.read()
+                        print(
+                            f"[GEMINI][generate_from_prompt] image {idx} bytes={len(image_bytes) if image_bytes else 0}"
+                        )
                         image = Image.open(io.BytesIO(image_bytes))
                         if image.mode in ("RGBA", "LA", "P"):
                             image = image.convert("RGB")
                         images_prompt.append(image)
-                    except Exception:
+                    except Exception as image_error:
+                        print(
+                            f"[GEMINI][generate_from_prompt] image processing failed for "
+                            f"{getattr(file, 'filename', 'unknown')}: {image_error}"
+                        )
+                        print(traceback.format_exc())
                         raise HTTPException(
                             status_code=400,
                             detail={"message": "error while trying to load a images"},
@@ -148,6 +167,11 @@ class GeminiAIService:
 
             contents = []
             contents.extend(prompt_parts)
+            print(
+                f"[GEMINI][generate_from_prompt] prompt_parts={len(prompt_parts)}, "
+                f"images_prompt={len(images_prompt)}"
+            )
+            print(f"[GEMINI][generate_from_prompt] prompt preview: {' '.join(prompt_parts)[:700]}")
 
             if images_prompt:
                 contents.extend(images_prompt)
@@ -156,8 +180,13 @@ class GeminiAIService:
                     "Strictly base the generation on the provided images. "
                     "Maintain product accuracy. Output only the final image."
                 )
+            response = None
             for i in range(max_retries):
                 try:
+                    print(
+                        f"[GEMINI][generate_from_prompt] request try={i + 1}/{max_retries}, "
+                        f"contents_count={len(contents)}"
+                    )
                     response = await cls.get_client().models.generate_content(
                         model="gemini-2.5-flash-image",
                         contents=contents,
@@ -165,35 +194,58 @@ class GeminiAIService:
                             image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
                         ),
                     )
+                    print(
+                        f"[GEMINI][generate_from_prompt] response received, "
+                        f"has_parts={bool(getattr(response, 'parts', None))}"
+                    )
                     if response.parts:
+                        print("[GEMINI][generate_from_prompt] response.parts present, breaking retry loop")
                         break
                     else:
+                        print("[GEMINI][generate_from_prompt] response.parts is empty -> return None")
                         return None
                 except errors.APIError as e:
                     if e.code == 503:
-                        print(f"Error gemini return 503 -> retry {e.message}")
+                        print(f"[GEMINI][generate_from_prompt] APIError 503 -> retry: {e.message}")
                     else:
-                        print(f"Gemini error: {e.code} \n\n{e.details}\n\n{e.message}")
+                        print(f"[GEMINI][generate_from_prompt] Gemini API error: {e.code} \n\n{e.details}\n\n{e.message}")
                         return None
+
+            image_bytes = None
+            if response is None:
+                print("[GEMINI][generate_from_prompt] response is None after retries")
+                return None
 
             for part in response.parts:
                 if part.inline_data is not None:
                     image_bytes = part.inline_data.data
+                    print(
+                        f"[GEMINI][generate_from_prompt] inline image bytes={len(image_bytes) if image_bytes else 0}"
+                    )
 
             if not image_bytes:
+                print("[GEMINI][generate_from_prompt] no inline image data found in response.parts")
                 raise HTTPException(
                     status_code=500, detail={"message": "failed to generate file"}
                 )
+            print("[GEMINI][generate_from_prompt] SUCCESS")
             return image_bytes
 
         except Exception as e:
-            print(f"Gemini error: {e}")
+            print(f"[GEMINI][generate_from_prompt] ERROR: {e}")
+            print(traceback.format_exc())
             return None
 
     @classmethod
     async def generate_prompt(
         cls, desc_type: str, pivot: str, images: list[UploadFile]
     ):
+        print("[GEMINI][generate_prompt] START")
+        print(
+            f"[GEMINI][generate_prompt] desc_type={desc_type}, "
+            f"pivot_len={len(pivot) if isinstance(pivot, str) else 0}, "
+            f"images_count={len(images) if isinstance(images, list) else 0}"
+        )
         contents = []
         max_retries = 3
         system_instruction = cls.PROMPT_TEMPLATES.get(
@@ -210,13 +262,14 @@ class GeminiAIService:
             contents.append(full_prompt_text)
 
         if isinstance(images, list):
-            # Если пользователь загрузил картинки
             full_prompt_text += "Изображения товара (см. вложения)."
             contents.append(full_prompt_text)
-            for file in images:
+            for idx, file in enumerate(images, start=1):
                 try:
-                    # Считываем картинку
-                    # Важно: file.seek(0) может понадобиться, если файл уже читали
+                    print(
+                        f"[GEMINI][generate_prompt] reading image {idx}/{len(images)}: "
+                        f"filename={getattr(file, 'filename', 'unknown')}"
+                    )
                     image_bytes = await file.read()
                     image = Image.open(io.BytesIO(image_bytes))
 
@@ -224,14 +277,21 @@ class GeminiAIService:
                         image = image.convert("RGB")
 
                     contents.append(image)
-                except Exception:
+                except Exception as image_error:
+                    print(
+                        f"[GEMINI][generate_prompt] skip image "
+                        f"{getattr(file, 'filename', 'unknown')} due to: {image_error}"
+                    )
+                    print(traceback.format_exc())
                     continue
 
         contents.append(" Не используй markdown и не добавляй звездочек!")
+        print(f"[GEMINI][generate_prompt] contents_count={len(contents)}")
 
         try:
             for retry in range(max_retries):
                 try:
+                    print(f"[GEMINI][generate_prompt] request try={retry + 1}/{max_retries}")
                     response = await cls.get_client().models.generate_content(
                         model="gemini-2.5-flash",
                         contents=contents,
@@ -241,12 +301,22 @@ class GeminiAIService:
                         ),
                     )
 
-                   
+                    print(
+                        f"[GEMINI][generate_prompt] response_text_len="
+                        f"{len(response.text) if getattr(response, 'text', None) else 0}"
+                    )
                     return response.text.strip() if response.text else None
                 except errors.APIError as e:
                     if e.code == 503:
-                        print(f"The model is overloaded trying again {retry}")
+                        print(f"[GEMINI][generate_prompt] APIError 503, retry={retry + 1}: {e.message}")
+                    else:
+                        print(
+                            f"[GEMINI][generate_prompt] APIError: code={e.code}, "
+                            f"message={e.message}, details={e.details}"
+                        )
+                        return None
 
         except Exception as e:
-            print(f"Gemini Error: {e}")
+            print(f"[GEMINI][generate_prompt] ERROR: {e}")
+            print(traceback.format_exc())
             return None

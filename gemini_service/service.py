@@ -46,13 +46,16 @@ class GeminiAIService:
 
         if not api_key:
             print("WARNING: Gemini API key is empty!")
+        else:
+            # Mask API key for security (show first 8 and last 4 chars)
+            print(f"[GEMINI] Using API key: {api_key}")
 
         if PRODUCTION:
-            print(f"PRODUCTION mode: direct connection (api_key={'set' if api_key else 'EMPTY'})")
+            print(f"[GEMINI] PRODUCTION mode: direct connection (api_key={'set' if api_key else 'EMPTY'})")
             http_client = httpx.AsyncClient()
         else:
             proxy_url = f"socks5://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
-            print(f"DEV mode: using proxy {proxy_url}")
+            print(f"[GEMINI] DEV mode: using proxy {proxy_url}")
             transport = httpx.AsyncHTTPTransport(proxy=proxy_url)
             http_client = httpx.AsyncClient(transport=transport)
 
@@ -188,7 +191,7 @@ class GeminiAIService:
                         f"contents_count={len(contents)}"
                     )
                     response = await cls.get_client().models.generate_content(
-                        model="gemini-2.5-flash-image",
+                        model="gemini-1.5-flash",
                         contents=contents,
                         config=types.GenerateContentConfig(
                             image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
@@ -207,9 +210,19 @@ class GeminiAIService:
                 except errors.APIError as e:
                     if e.code == 503:
                         print(f"[GEMINI][generate_from_prompt] APIError 503 -> retry: {e.message}")
+                    elif e.code == 429:
+                        print(f"[GEMINI][generate_from_prompt] APIError 429 QUOTA EXCEEDED:")
+                        print(f"  Message: {e.message}")
+                        print(f"  Details: {e.details}")
+                        return None
                     else:
                         print(f"[GEMINI][generate_from_prompt] Gemini API error: {e.code} \n\n{e.details}\n\n{e.message}")
                         return None
+
+            image_bytes = None
+            if response is None:
+                print("[GEMINI][generate_from_prompt] response is None after retries")
+                return None
 
             image_bytes = None
             if response is None:
@@ -293,7 +306,7 @@ class GeminiAIService:
                 try:
                     print(f"[GEMINI][generate_prompt] request try={retry + 1}/{max_retries}")
                     response = await cls.get_client().models.generate_content(
-                        model="gemini-2.5-flash",
+                        model="gemini-1.5-flash",
                         contents=contents,
                         config=types.GenerateContentConfig(
                             response_modalities=["Text"],
@@ -309,6 +322,12 @@ class GeminiAIService:
                 except errors.APIError as e:
                     if e.code == 503:
                         print(f"[GEMINI][generate_prompt] APIError 503, retry={retry + 1}: {e.message}")
+                    elif e.code == 429:
+                        print(f"[GEMINI][generate_prompt] APIError 429 QUOTA EXCEEDED:")
+                        print(f"  Message: {e.message}")
+                        print(f"  Details: {e.details}")
+                        print(f"  HINT: Check API key billing status at https://ai.google.dev/")
+                        return None
                     else:
                         print(
                             f"[GEMINI][generate_prompt] APIError: code={e.code}, "

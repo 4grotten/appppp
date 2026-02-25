@@ -49,8 +49,8 @@ class GeminiConfig(TimestampModel):
     link = models.CharField(max_length=255, null=True, blank=True)
     login = models.CharField(max_length=255, null=True, blank=True)
     password = models.CharField(max_length=255, null=True, blank=True)
-    model_for_text = models.ForeignKey(GeminiModelConfig, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Gemini Model", help_text="Model to use for text generation")
-    model_for_image = models.ForeignKey(GeminiModelConfig, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Gemini Image Model", help_text="Model to use for image generation")
+    model_for_text = models.ForeignKey(GeminiModelConfig, on_delete=models.SET_NULL, null=True, blank=True, related_name="gemini_configs_text", verbose_name="Gemini Model", help_text="Model to use for text generation")
+    model_for_image = models.ForeignKey(GeminiModelConfig, on_delete=models.SET_NULL, null=True, blank=True, related_name="gemini_configs_image", verbose_name="Gemini Image Model", help_text="Model to use for image generation")
 
     class Meta:
         verbose_name = "Gemini Api"

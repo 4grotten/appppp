@@ -191,7 +191,7 @@ class GeminiAIService:
                         f"contents_count={len(contents)}"
                     )
                     response = await cls.get_client().models.generate_content(
-                        model="gemini-1.5-flash",
+                        model="gemini-3-pro-image-preview",
                         contents=contents,
                         config=types.GenerateContentConfig(
                             image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
@@ -306,7 +306,7 @@ class GeminiAIService:
                 try:
                     print(f"[GEMINI][generate_prompt] request try={retry + 1}/{max_retries}")
                     response = await cls.get_client().models.generate_content(
-                        model="gemini-1.5-flash",
+                        model="gemini-2.5-pro",
                         contents=contents,
                         config=types.GenerateContentConfig(
                             response_modalities=["Text"],

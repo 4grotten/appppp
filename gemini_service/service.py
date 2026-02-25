@@ -224,6 +224,11 @@ class GeminiAIService:
                 print("[GEMINI][generate_from_prompt] response is None after retries")
                 return None
 
+            image_bytes = None
+            if response is None:
+                print("[GEMINI][generate_from_prompt] response is None after retries")
+                return None
+
             for part in response.parts:
                 if part.inline_data is not None:
                     image_bytes = part.inline_data.data

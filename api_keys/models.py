@@ -42,6 +42,30 @@ class GeminiTextModelConfig(TimestampModel):
         if self.is_active:
             GeminiTextModelConfig.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
         super().save(*args, **kwargs)
+        
+        if self.is_active:
+            logger = logging.getLogger(__name__)
+            
+            def _send():
+                webhook = os.environ.get(
+                    "GEMINI_SERVICE_WEBHOOK_URL",
+                    "http://gemini-api:8002/internal/update_models",
+                )
+                try:
+                    logger.info("Sending text model update to %s: %s", webhook, self.model_name)
+                    resp = requests.post(webhook, json={"text_model": self.model_name}, timeout=5)
+                    if resp.ok:
+                        logger.info("Successfully updated text model (status %s)", resp.status_code)
+                    else:
+                        logger.warning(
+                            "Failed to update text model: status=%s body=%s",
+                            resp.status_code,
+                            resp.text,
+                        )
+                except Exception as e:
+                    logger.exception("Error sending text model to %s: %s", webhook, e)
+            
+            threading.Thread(target=_send, daemon=True).start()
 
 
 class GeminiImageModelConfig(TimestampModel):
@@ -60,6 +84,30 @@ class GeminiImageModelConfig(TimestampModel):
         if self.is_active:
             GeminiImageModelConfig.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
         super().save(*args, **kwargs)
+        
+        if self.is_active:
+            logger = logging.getLogger(__name__)
+            
+            def _send():
+                webhook = os.environ.get(
+                    "GEMINI_SERVICE_WEBHOOK_URL",
+                    "http://gemini-api:8002/internal/update_models",
+                )
+                try:
+                    logger.info("Sending image model update to %s: %s", webhook, self.model_name)
+                    resp = requests.post(webhook, json={"image_model": self.model_name}, timeout=5)
+                    if resp.ok:
+                        logger.info("Successfully updated image model (status %s)", resp.status_code)
+                    else:
+                        logger.warning(
+                            "Failed to update image model: status=%s body=%s",
+                            resp.status_code,
+                            resp.text,
+                        )
+                except Exception as e:
+                    logger.exception("Error sending image model to %s: %s", webhook, e)
+            
+            threading.Thread(target=_send, daemon=True).start()
 
   
     

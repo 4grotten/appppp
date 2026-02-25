@@ -26,6 +26,43 @@ class ChatGPTConfig(ChatGPTSettings):
         verbose_name_plural = "ChatGpt Description Api"
 
 
+class GeminiTextModelConfig(TimestampModel):
+    model_name = models.CharField(max_length=100, verbose_name="Model Name", help_text="Model name for text generation, e.g. gemini-2.5-pro")
+    is_active = models.BooleanField(default=False, verbose_name="Is Active")
+
+    class Meta:
+        verbose_name = "Gemini Text Model"
+        verbose_name_plural = "Gemini Text Models"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.model_name
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            GeminiTextModelConfig.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+
+
+class GeminiImageModelConfig(TimestampModel):
+    model_name = models.CharField(max_length=100, verbose_name="Model Name", help_text="Model name for image generation, e.g. gemini-3-pro-image-preview")
+    is_active = models.BooleanField(default=False, verbose_name="Is Active")
+
+    class Meta:
+        verbose_name = "Gemini Image Model"
+        verbose_name_plural = "Gemini Image Models"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.model_name
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            GeminiImageModelConfig.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+
+  
+    
 class GeminiConfig(TimestampModel):
     api_key = models.CharField(
         max_length=255,
@@ -36,6 +73,8 @@ class GeminiConfig(TimestampModel):
     link = models.CharField(max_length=255, null=True, blank=True)
     login = models.CharField(max_length=255, null=True, blank=True)
     password = models.CharField(max_length=255, null=True, blank=True)
+    model_for_text = models.ForeignKey(GeminiTextModelConfig, on_delete=models.SET_NULL, null=True, blank=True, related_name="gemini_configs", verbose_name="Text Model", help_text="Model to use for text generation")
+    model_for_image = models.ForeignKey(GeminiImageModelConfig, on_delete=models.SET_NULL, null=True, blank=True, related_name="gemini_configs", verbose_name="Image Model", help_text="Model to use for image generation")
 
     class Meta:
         verbose_name = "Gemini Api"

@@ -6,6 +6,7 @@ from fastapi import UploadFile
 from fastapi.exceptions import HTTPException
 from google.genai import Client, errors, types
 from PIL import Image
+from api_keys.models import GeminiConfig, GeminiTextModelConfig, GeminiImageModelConfig
 from schemas import GeminiAICreateImage
 from settings import (
     PRODUCTION,
@@ -19,6 +20,31 @@ from settings import (
 
 class GeminiAIService:
     _client = None
+
+    @classmethod
+    def _get_active_model_config(cls):
+        """Get active model configuration from database"""
+        try:
+            gemini_config = GeminiConfig.objects.filter(is_active=True).first()
+            if not gemini_config:
+                print("[GEMINI] WARNING: No active GeminiConfig found, using fallback models")
+                return {"text_model": "gemini-2.5-pro", "image_model": "gemini-2.5-pro"}
+            
+            text_model = "gemini-2.5-pro"
+            image_model = "gemini-2.5-pro"
+            
+            if gemini_config.model_for_text:
+                text_model = gemini_config.model_for_text.model_name
+                print(f"[GEMINI] Using text model from config: {text_model}")
+            
+            if gemini_config.model_for_image:
+                image_model = gemini_config.model_for_image.model_name
+                print(f"[GEMINI] Using image model from config: {image_model}")
+            
+            return {"text_model": text_model, "image_model": image_model}
+        except Exception as e:
+            print(f"[GEMINI] ERROR getting model config: {e}, using fallback models")
+            return {"text_model": "gemini-2.5-pro", "image_model": "gemini-2.5-pro"}
 
     PROMPT_TEMPLATES = {
         "item_description": (
@@ -186,12 +212,14 @@ class GeminiAIService:
             response = None
             for i in range(max_retries):
                 try:
+                    model_config = cls._get_active_model_config()
+                    image_model = model_config["image_model"]
                     print(
                         f"[GEMINI][generate_from_prompt] request try={i + 1}/{max_retries}, "
-                        f"contents_count={len(contents)}"
+                        f"contents_count={len(contents)}, model={image_model}"
                     )
                     response = await cls.get_client().models.generate_content(
-                        model="gemini-3-pro-image-preview",
+                        model=image_model,
                         contents=contents,
                         config=types.GenerateContentConfig(
                             image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
@@ -304,9 +332,11 @@ class GeminiAIService:
         try:
             for retry in range(max_retries):
                 try:
-                    print(f"[GEMINI][generate_prompt] request try={retry + 1}/{max_retries}")
+                    model_config = cls._get_active_model_config()
+                    text_model = model_config["text_model"]
+                    print(f"[GEMINI][generate_prompt] request try={retry + 1}/{max_retries}, model={text_model}")
                     response = await cls.get_client().models.generate_content(
-                        model="gemini-2.5-pro",
+                        model=text_model,
                         contents=contents,
                         config=types.GenerateContentConfig(
                             response_modalities=["Text"],

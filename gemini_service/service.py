@@ -6,7 +6,7 @@ from fastapi import UploadFile
 from fastapi.exceptions import HTTPException
 from google.genai import Client, errors, types
 from PIL import Image
-from api_keys.models import GeminiConfig, GeminiModelConfig
+from api_keys.models import GeminiConfig, GeminiTextModelConfig, GeminiImageModelConfig
 from schemas import GeminiAICreateImage
 from settings import (
     PRODUCTION,
@@ -34,11 +34,11 @@ class GeminiAIService:
             image_model = "gemini-2.5-pro"
             
             if gemini_config.model_for_text:
-                text_model = gemini_config.model_for_text.text_model
+                text_model = gemini_config.model_for_text.model_name
                 print(f"[GEMINI] Using text model from config: {text_model}")
             
             if gemini_config.model_for_image:
-                image_model = gemini_config.model_for_image.image_model
+                image_model = gemini_config.model_for_image.model_name
                 print(f"[GEMINI] Using image model from config: {image_model}")
             
             return {"text_model": text_model, "image_model": image_model}

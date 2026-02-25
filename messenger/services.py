@@ -7,7 +7,7 @@ from messenger.models import (
     ChatMessage,
 )
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Exists, OuterRef, Subquery, DateTimeField, Value, IntegerField
+from django.db.models import  OuterRef, Subquery, DateTimeField, Value
 from django.db.models.functions import Coalesce, Greatest
 from django.utils import timezone
 from users.models import User

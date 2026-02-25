@@ -124,11 +124,16 @@ class GetOrCreatePrivateChatView(ListCreateAPIView):
                 queryset, sort_by, user=self.request.user
             )
         if search:
-            queryset = queryset.filter(
+            search_filter = (
                 Q(title__icontains=search)
+                | Q(members__first_name__icontains=search)
+                | Q(members__last_name__icontains=search)
                 | Q(members__full_name__icontains=search)
                 | Q(members__phone_number__icontains=search)
-            ).distinct()
+            )
+            if search.isdigit():
+                search_filter = search_filter | Q(members__id=int(search))
+            queryset = queryset.filter(search_filter).distinct()
         return queryset
 
     def post(self, request):

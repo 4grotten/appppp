@@ -15,6 +15,8 @@ from settings import (
     PROXY_PORT,
     PROXY_USER,
     get_gemini_api_key,
+    get_gemini_text_model,
+    get_gemini_image_model,
 )
 
 
@@ -23,23 +25,13 @@ class GeminiAIService:
 
     @classmethod
     def _get_active_model_config(cls):
-        """Get active model configuration from database"""
+        """Get active model configuration from settings"""
         try:
-            gemini_config = GeminiConfig.objects.filter(is_active=True).first()
-            if not gemini_config:
-                print("[GEMINI] WARNING: No active GeminiConfig found, using fallback models")
-                return {"text_model": "gemini-2.5-pro", "image_model": "gemini-2.5-pro"}
+            text_model = get_gemini_text_model()
+            image_model = get_gemini_image_model()
             
-            text_model = "gemini-2.5-pro"
-            image_model = "gemini-2.5-pro"
-            
-            if gemini_config.model_for_text:
-                text_model = gemini_config.model_for_text.model_name
-                print(f"[GEMINI] Using text model from config: {text_model}")
-            
-            if gemini_config.model_for_image:
-                image_model = gemini_config.model_for_image.model_name
-                print(f"[GEMINI] Using image model from config: {image_model}")
+            print(f"[GEMINI] Using text model: {text_model}")
+            print(f"[GEMINI] Using image model: {image_model}")
             
             return {"text_model": text_model, "image_model": image_model}
         except Exception as e:

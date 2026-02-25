@@ -98,6 +98,8 @@ class GetOrCreatePrivateChatView(ListCreateAPIView):
         sort_by = self.request.query_params.get("sort_by")
         organization_id = self.request.query_params.get("organization_id")
         queryset = MessengerChat.objects.filter(members=self.request.user).distinct()
+        search = self.request.query_params.get("search")
+
         if organization_id:
             queryset = queryset.filter(organization_id=organization_id)
         else:
@@ -121,6 +123,12 @@ class GetOrCreatePrivateChatView(ListCreateAPIView):
             queryset = self.services_class.sort_by(
                 queryset, sort_by, user=self.request.user
             )
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search)
+                | Q(members__full_name__icontains=search)
+                | Q(members__phone_number__icontains=search)
+            ).distinct()
         return queryset
 
     def post(self, request):

@@ -26,6 +26,19 @@ class ChatGPTConfig(ChatGPTSettings):
         verbose_name_plural = "ChatGpt Description Api"
 
 
+class GeminiModelConfig(TimestampModel):
+    text_model = models.CharField(max_length=100, verbose_name="Text Model Name", help_text="Model name to use for text generation, e.g. gemini-2.5-pro")
+    image_model = models.CharField(max_length=100, verbose_name="Image Model Name", help_text="Model name to use for image generation, e.g. gemini-3-pro-image-preview")
+    is_active = models.BooleanField(default=False, verbose_name="Is Active", help_text="Whether this model is active and should be used for generation")
+
+    class Meta:
+        verbose_name = "Gemini Model Config"
+        verbose_name_plural = "Gemini Model Configs"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Text: {self.text_model} | Image: {self.image_model} ({'Active' if self.is_active else 'Inactive'})"
+    
 class GeminiConfig(TimestampModel):
     api_key = models.CharField(
         max_length=255,
@@ -36,6 +49,8 @@ class GeminiConfig(TimestampModel):
     link = models.CharField(max_length=255, null=True, blank=True)
     login = models.CharField(max_length=255, null=True, blank=True)
     password = models.CharField(max_length=255, null=True, blank=True)
+    model_for_text = models.ForeignKey(GeminiModelConfig, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Gemini Model", help_text="Model to use for text generation")
+    model_for_image = models.ForeignKey(GeminiModelConfig, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Gemini Image Model", help_text="Model to use for image generation")
 
     class Meta:
         verbose_name = "Gemini Api"

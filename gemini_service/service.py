@@ -6,6 +6,7 @@ from fastapi import UploadFile
 from fastapi.exceptions import HTTPException
 from google.genai import Client, errors, types
 from PIL import Image
+from api_keys.models import GeminiConfig, GeminiTextModelConfig, GeminiImageModelConfig
 from schemas import GeminiAICreateImage
 from settings import (
     PRODUCTION,

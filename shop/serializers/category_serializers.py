@@ -59,7 +59,7 @@ class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
 
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'organization', 'sub_icon', 'criteria_subcategory')
+        fields = ('id', 'name', 'organization', 'icon', 'sub_icon', 'criteria_subcategory')
 
        
 class NonEmptyItemSubcategorySerializer(ItemSubcategoryBriefSerializer):

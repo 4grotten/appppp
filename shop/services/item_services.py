@@ -108,9 +108,10 @@ class ShopItemService:
         cls,
         organization: Organization,
         user: User,
-        search: Union[str, None],
-        subcategory_id: Union[str, None],
+        search: Union[str, None] = None,
+        subcategory_id: Union[str, None] = None,
         without_price: Union[bool, None] = None,
+        ordering: Union[str, None] = None,
     ) -> QuerySet:
         base_filters = Q()
         if search:
@@ -137,26 +138,12 @@ class ShopItemService:
                     ),
                     is_published=True,
                 )
-                # queryset = ShopItem.objects.filter(
-                #     organization__in=organization.items_group.organizations.values_list(
-                #         "id"
-                #     ),
-                #     is_published=True,
-                # )
             else:
                 base_filters &= Q(organization=organization) | Q(
                     organization__in=organization.items_group.organizations.values_list(
                         "id"
                     )
                 )
-                # queryset = ShopItem.objects.filter(
-                #     Q(organization=organization)
-                #     | Q(
-                #         organization__in=organization.items_group.organizations.values_list(
-                #             "id"
-                #         )
-                #     )
-                # )
             queryset = ShopItem.objects.filter(base_filters)
         else:
             queryset = ShopItem.objects.filter(base_filters, organization=organization)
@@ -166,7 +153,13 @@ class ShopItemService:
         queryset = queryset.annotate(
             annotated_total_stock=Coalesce(Sum('shop_item_size_counts__count'), Value(0))
         )
-        return queryset.distinct()
+        queryset = queryset.distinct()
+
+        if ordering == "price":
+            return queryset.order_by("price")
+        if ordering == "-price":
+            return queryset.order_by("-price")
+        return queryset.order_by("-updated_at", "-created_at")
 
     @classmethod
     def get_organization_rentals_queryset_for_user(

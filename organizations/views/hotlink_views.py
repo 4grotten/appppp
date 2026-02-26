@@ -1,4 +1,5 @@
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Exists, OuterRef
 from rest_framework import permissions, status
 from rest_framework.generics import (
     CreateAPIView,
@@ -17,7 +18,7 @@ from rest_framework.response import Response
 
 from common.exceptions import NotAcceptableException
 from organizations.constants import HOTLINK_COLLECTION
-from organizations.models import HotlinkCollectionLink
+from organizations.models import Hotlink, HotlinkCollectionItem, HotlinkCollectionLink
 from organizations.serializers.hotlink_serializers import (
     HotlinkCollectionLinkSerializer,
     HotlinkCollectionLinkUpdateSerializer,
@@ -131,19 +132,60 @@ class OrganizationHotlinkShopItems(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ItemInHotlinkCollectionSerializer
 
+    _hotlink = None
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if self._hotlink is not None:
+            context["hotlink"] = self._hotlink
+        return context
+
+    def _get_order_fields(self, ordering):
+        if ordering == "price":
+            return ("price",)
+        if ordering == "-price":
+            return ("-price",)
+        return ("-updated_at", "-created_at")
+
     def get_queryset(self):
         organization = OrganizationService.get(id=self.kwargs["pk"])
         search = self.request.query_params.get("search", None)  # type: ignore
         without_price = self.request.query_params.get("without_price", None)
         subcategory_id = self.request.query_params.get("subcategory_id", None)  # type: ignore
+        ordering = self.request.query_params.get("ordering", None)
 
-        return ShopItemService.get_organization_items_queryset_for_user(
+        hotlink_id = self.request.query_params.get("hotlink_id", None)
+        if hotlink_id:
+            self._hotlink = HotlinkService.get(
+                id=hotlink_id,
+                organization=organization,
+                link_type=HOTLINK_COLLECTION,
+            )
+        else:
+            self._hotlink = Hotlink.objects.filter(
+                organization=organization,
+                link_type=HOTLINK_COLLECTION,
+            ).order_by("-updated_at").first()
+
+        queryset = ShopItemService.get_organization_items_queryset_for_user(
             organization=organization,
             user=self.request.user,
             search=search,
             without_price=without_price,
             subcategory_id=subcategory_id,
-        ).order_by("-updated_at")
+            ordering=ordering,
+        )
+
+        if self._hotlink is None:
+            return queryset
+
+        selected_items = HotlinkCollectionItem.objects.filter(
+            hotlink=self._hotlink,
+            item_id=OuterRef("pk"),
+        )
+        return queryset.annotate(
+            _is_selected_order=Exists(selected_items)
+        ).order_by("-_is_selected_order", *self._get_order_fields(ordering))
 
 
 class HotlinkItemsListUpdateView(GenericAPIView):

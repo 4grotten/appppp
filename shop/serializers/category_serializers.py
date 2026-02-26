@@ -12,9 +12,16 @@ from stock.serializers import CriteriaSubcategorySerializer
 
 
 class ItemSubcategoryCreateSerializer(serializers.ModelSerializer):
+    sub_icon_data = serializers.SerializerMethodField()
+
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'organization', 'category', 'sub_icon')
+        fields = ('id', 'name', 'organization', 'category', 'sub_icon', 'sub_icon_data')
+
+    def get_sub_icon_data(self, subcategory: ItemSubcategory):
+        if subcategory.sub_icon:
+            return ImageSerializer(subcategory.sub_icon, context=self.context).data
+        return None
 
     def validate(self, attrs):
         user = self.context['request'].user
@@ -43,10 +50,16 @@ class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
 class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
     criteria_subcategory = CriteriaSubcategorySerializer(many=True, required=False)
+    sub_icon = serializers.SerializerMethodField()
+
+    def get_sub_icon(self, subcategory: ItemSubcategory):
+        if subcategory.sub_icon:
+            return ImageSerializer(subcategory.sub_icon, context=self.context).data
+        return None
 
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'organization', 'icon', 'criteria_subcategory')
+        fields = ('id', 'name', 'organization', 'icon', 'sub_icon', 'criteria_subcategory')
 
        
 class NonEmptyItemSubcategorySerializer(ItemSubcategoryBriefSerializer):

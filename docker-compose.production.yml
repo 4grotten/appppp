@@ -124,6 +124,16 @@ services:
     image: devlikeapro/waha-plus:noweb
     container_name: appofiz_waha_prod
     restart: unless-stopped
+    security_opt:
+      - seccomp=unconfined
+    pids_limit: 2048
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+      nproc:
+        soft: 65535
+        hard: 65535
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -156,4 +166,4 @@ services:
     mem_limit: 1g
     mem_reservation: 512m
     ports:
-      - "3000:3000"
+      - "3005:3000"

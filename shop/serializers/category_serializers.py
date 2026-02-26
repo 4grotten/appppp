@@ -50,10 +50,16 @@ class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
 class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
     criteria_subcategory = CriteriaSubcategorySerializer(many=True, required=False)
+    sub_icon = serializers.SerializerMethodField()
+
+    def get_sub_icon(self, subcategory: ItemSubcategory):
+        if subcategory.sub_icon:
+            return ImageSerializer(subcategory.sub_icon, context=self.context).data
+        return None
 
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'organization', 'icon', 'criteria_subcategory')
+        fields = ('id', 'name', 'organization', 'sub_icon', 'criteria_subcategory')
 
        
 class NonEmptyItemSubcategorySerializer(ItemSubcategoryBriefSerializer):

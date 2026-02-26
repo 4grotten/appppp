@@ -138,26 +138,12 @@ class ShopItemService:
                     ),
                     is_published=True,
                 )
-                # queryset = ShopItem.objects.filter(
-                #     organization__in=organization.items_group.organizations.values_list(
-                #         "id"
-                #     ),
-                #     is_published=True,
-                # )
             else:
                 base_filters &= Q(organization=organization) | Q(
                     organization__in=organization.items_group.organizations.values_list(
                         "id"
                     )
                 )
-                # queryset = ShopItem.objects.filter(
-                #     Q(organization=organization)
-                #     | Q(
-                #         organization__in=organization.items_group.organizations.values_list(
-                #             "id"
-                #         )
-                #     )
-                # )
             queryset = ShopItem.objects.filter(base_filters)
         else:
             queryset = ShopItem.objects.filter(base_filters, organization=organization)

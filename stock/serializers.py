@@ -85,7 +85,7 @@ class ShopItemShortSerializer(serializers.ModelSerializer):
 class SubcategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'sub_icon')
 
 
 class ShopItemSetSerializer(serializers.ModelSerializer):

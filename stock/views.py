@@ -1,4 +1,4 @@
-from django.db.models import Q, Case, When, Value, IntegerField
+from django.db.models import Q, Case, When, Value, IntegerField, Exists, OuterRef
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView, RetrieveAPIView, GenericAPIView
 from io import BytesIO
@@ -204,22 +204,37 @@ class OrganizationShopItemsInSetListView(ListAPIView):
         try:
             shop_item = ShopItemService.get(id=self.kwargs['pk'])
             subcategory = self.request.query_params.get('subcategory', None)
+            ordering = self.request.query_params.get('ordering', None)
             if subcategory:
                 queryset = ShopItem.objects.filter(organization=shop_item.organization, subcategory_id=subcategory)\
-                    .exclude(id=shop_item.id).order_by('-updated_at')
+                    .exclude(id=shop_item.id)
             else:
-                queryset = ShopItem.objects.filter(organization=shop_item.organization).exclude(id=shop_item.id).order_by('-updated_at')
+                queryset = ShopItem.objects.filter(organization=shop_item.organization).exclude(id=shop_item.id)
+
+            in_set_subquery = ShopItem.objects.filter(
+                id=OuterRef('id'),
+                shop_items_set_stocks__main_shop_item=shop_item,
+            )
+            queryset = queryset.annotate(in_set_order=Exists(in_set_subquery))
+            if ordering == 'price':
+                queryset = queryset.order_by('-in_set_order', 'price')
+            elif ordering == '-price':
+                queryset = queryset.order_by('-in_set_order', '-price')
+            else:
+                queryset = queryset.order_by('-in_set_order', '-updated_at', '-created_at')
         except ShopItem.DoesNotExist:
             raise ObjectNotFoundException(_('ShopItem not found'))
-        return self.paginate_queryset(queryset)
+        return queryset
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = OrganizationShopItemsInSetSerializer(queryset, many=True,
-                                                          context={'main_shop_item_id': self.kwargs['pk']})
-
-        serializer_data = sorted(serializer.data, key=lambda k: k['in_set'], reverse=True)
-        return self.paginator.get_paginated_response(serializer_data)
+        page = self.paginate_queryset(queryset)
+        serializer = OrganizationShopItemsInSetSerializer(
+            page,
+            many=True,
+            context={'main_shop_item_id': self.kwargs['pk']},
+        )
+        return self.get_paginated_response(serializer.data)
 
 
 class ShopItemLinkSetListView(ListAPIView):

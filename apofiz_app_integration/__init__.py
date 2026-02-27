@@ -1,0 +1,1 @@
+"""Apofiz app integration package."""

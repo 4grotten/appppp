@@ -1,14 +1,19 @@
 from django.db.models import Q
+import logging
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
+from common.models import File
 from common.serializers import ImageSerializer
 from organizations.models import HotlinkCollectionSubcategory
 from organizations.services.organization_services import OrganizationService
 from shop.models import ItemCategory, ItemSubcategory
 from shop.services.category_services import ItemSubcategoryService
 from stock.serializers import CriteriaSubcategorySerializer
+
+
+logger = logging.getLogger(__name__)
 
 
 class ItemSubcategoryCreateSerializer(serializers.ModelSerializer):
@@ -33,6 +38,7 @@ class ItemSubcategoryCreateSerializer(serializers.ModelSerializer):
 
 class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
     icon = serializers.SerializerMethodField()
+    sub_icon = serializers.SerializerMethodField()
 
     def get_icon(self, subcategory: ItemSubcategory):
         icon_obj = subcategory.sub_icon or (subcategory.category.icon if subcategory.category else None)
@@ -40,10 +46,15 @@ class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
         if icon_obj:
             return ImageSerializer(icon_obj, context=self.context).data
         return None
+
+    def get_sub_icon(self, subcategory: ItemSubcategory):
+        if subcategory.sub_icon:
+            return ImageSerializer(subcategory.sub_icon, context=self.context).data
+        return None
     
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'icon')
+        fields = ('id', 'name', 'icon', 'sub_icon')
 
 
 
@@ -56,6 +67,78 @@ class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
         if subcategory.sub_icon:
             return ImageSerializer(subcategory.sub_icon, context=self.context).data
         return None
+
+    def update(self, instance, validated_data):
+        sub_icon_data = self.initial_data.get("sub_icon", serializers.empty)
+        request = self.context.get("request")
+        user_id = getattr(getattr(request, "user", None), "id", None)
+
+        logger.info(
+            "[ItemSubcategorySerializer.update] start subcategory_id=%s user_id=%s sub_icon_input=%s validated_keys=%s",
+            instance.id,
+            user_id,
+            sub_icon_data,
+            list(validated_data.keys()),
+        )
+        print(
+            f"[ItemSubcategorySerializer.update] start subcategory_id={instance.id} "
+            f"user_id={user_id} sub_icon_input={sub_icon_data}"
+        )
+
+        if sub_icon_data is not serializers.empty:
+            if sub_icon_data in (None, ""):
+                instance.sub_icon = None
+                logger.info(
+                    "[ItemSubcategorySerializer.update] clear sub_icon for subcategory_id=%s",
+                    instance.id,
+                )
+                print(f"[ItemSubcategorySerializer.update] clear sub_icon subcategory_id={instance.id}")
+            else:
+                try:
+                    instance.sub_icon = File.objects.get(pk=int(sub_icon_data))
+                    logger.info(
+                        "[ItemSubcategorySerializer.update] set sub_icon=%s for subcategory_id=%s",
+                        instance.sub_icon_id,
+                        instance.id,
+                    )
+                    print(
+                        f"[ItemSubcategorySerializer.update] set sub_icon={instance.sub_icon_id} "
+                        f"subcategory_id={instance.id}"
+                    )
+                except (TypeError, ValueError):
+                    logger.warning(
+                        "[ItemSubcategorySerializer.update] invalid sub_icon value=%s for subcategory_id=%s",
+                        sub_icon_data,
+                        instance.id,
+                    )
+                    print(
+                        f"[ItemSubcategorySerializer.update] invalid sub_icon={sub_icon_data} "
+                        f"subcategory_id={instance.id}"
+                    )
+                    raise serializers.ValidationError({"sub_icon": _("A valid integer is required.")})
+                except File.DoesNotExist:
+                    logger.warning(
+                        "[ItemSubcategorySerializer.update] sub_icon file not found value=%s subcategory_id=%s",
+                        sub_icon_data,
+                        instance.id,
+                    )
+                    print(
+                        f"[ItemSubcategorySerializer.update] file not found sub_icon={sub_icon_data} "
+                        f"subcategory_id={instance.id}"
+                    )
+                    raise serializers.ValidationError({"sub_icon": _("File does not exist.")})
+
+        updated_instance = super().update(instance, validated_data)
+        logger.info(
+            "[ItemSubcategorySerializer.update] success subcategory_id=%s sub_icon_id=%s",
+            updated_instance.id,
+            updated_instance.sub_icon_id,
+        )
+        print(
+            f"[ItemSubcategorySerializer.update] success subcategory_id={updated_instance.id} "
+            f"sub_icon_id={updated_instance.sub_icon_id}"
+        )
+        return updated_instance
 
     class Meta:
         model = ItemSubcategory

@@ -674,7 +674,10 @@ def process_whatsapp_message_task(
 
     # Check if organization subscription is active
     from messenger_bots.services.subscription_check import check_subscription_active
-    if not check_subscription_active(whatsapp_bot.organization):
+    if not check_subscription_active(
+        whatsapp_bot.organization,
+        feature="whatsapp_bot_ai",
+    ):
         logger.info(f"[WA_TASK] Subscription expired for org {whatsapp_bot.organization_id}, skipping AI response")
         return {"success": True, "subscription_expired": True}
 

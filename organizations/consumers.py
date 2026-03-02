@@ -27,6 +27,7 @@ from organizations.services.assistant_services import (
     AssistantService,
     ChatService,
 )
+from organizations.services.ai_access_service import check_ai_feature_access
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem 
 
@@ -104,7 +105,10 @@ class CommentConsumer(AsyncWebsocketConsumer):
             #     return
             
             assistant = await self.get_assistant_by_chat(chat=chat)
-            user_has_active_assistant = await self.user_has_active_assistant(assistant=assistant)
+            ai_access_allowed = await self.organization_has_ai_access(
+                organization=assistant.organization,
+                feature="web_chat_ai",
+            )
             is_enabled = await self.get_chat_assistant_is_enabled_flag(chat=chat)
             chat_by_org_user = await self.get_chat_chat_org_by_user(chat=chat)
                 
@@ -112,7 +116,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 if chat_by_org_user:
                     await self.handle_user_response(data, user)
                 else:
-                    if user_has_active_assistant:
+                    if ai_access_allowed:
                         if assistant_id is None:
                             comment = await self.handle_user_response(data, user)
 
@@ -159,6 +163,10 @@ class CommentConsumer(AsyncWebsocketConsumer):
         return UserAssistant.objects.filter(
             assistant=assistant, is_active=True
         ).exists()
+
+    @database_sync_to_async
+    def organization_has_ai_access(self, organization, feature):
+        return check_ai_feature_access(organization=organization, feature=feature)
 
     @database_sync_to_async
     def get_assistant(self, assistant_id):
@@ -574,17 +582,18 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
                     organization=organization
                 )
                 logger.info("Current assistant: %s", assistant)
-                user_has_active_assistant = await self.user_has_active_assistant(
-                    assistant=assistant
+                ai_access_allowed = await self.organization_has_ai_access(
+                    organization=organization,
+                    feature="web_chat_ai",
                 )
-                logger.info("User has active assistant: %s", user_has_active_assistant)
+                logger.info("AI access allowed: %s", ai_access_allowed)
                 is_enabled = await self.get_assistant_is_enabled_flag(
                     assistant=assistant
                 )
                 logger.info("Chat assistant is enabled: %s", is_enabled)
                 if is_enabled:
                     logger.info("Chat assistant is enabled.")
-                    if user_has_active_assistant:
+                    if ai_access_allowed:
                         await self.send_message_to_item_ai(comment)
                         logger.info("Sent message to AI.")
 
@@ -626,6 +635,10 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
         return UserAssistant.objects.filter(
             assistant=assistant, is_active=True
         ).exists()
+
+    @database_sync_to_async
+    def organization_has_ai_access(self, organization, feature):
+        return check_ai_feature_access(organization=organization, feature=feature)
 
     @database_sync_to_async
     def get_assistant(self, assistant_id):
@@ -804,6 +817,13 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
             parent_id = data.get("parent", None)
             assistant_id = data.get("assistant_id", None)
             assistant = await self.get_assistant(assistant_id)
+            ai_access_allowed = await self.organization_has_ai_access(
+                organization=assistant.organization,
+                feature="web_chat_ai",
+            )
+            if not ai_access_allowed:
+                logger.info("AI access denied for org %s in item chat", assistant.organization_id)
+                return
             parent = await self.get_comment(parent_id)
             item = await self.get_item_with_parent(parent)
             comment = await self.create_item_comment_with_ai_response(

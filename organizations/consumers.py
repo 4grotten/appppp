@@ -5,6 +5,7 @@ import json
 import logging
 import re
 import uuid
+import requests
 
 from django.core.files.base import ContentFile
 
@@ -121,7 +122,13 @@ class CommentConsumer(AsyncWebsocketConsumer):
                             comment = await self.handle_user_response(data, user)
 
                             if comment:
-                                await self.send_message_to_ai_with_audio(comment, user_audio_base64)
+                                ai_sent = await self.send_message_to_ai_with_audio(comment, user_audio_base64)
+                                if not ai_sent:
+                                    logger.warning(
+                                        "AI socket unavailable for chat %s, sending default assistant response",
+                                        chat.id,
+                                    )
+                                    await self.handle_ai_default_response(parent=comment, user=user)
                             else:
                                 logger.error("Comment creation failed, skipping AI response.")
                         else:
@@ -312,17 +319,50 @@ class CommentConsumer(AsyncWebsocketConsumer):
         return data
 
     async def send_message_to_ai_with_audio(self, comment, audio_base64):
+        data = await self.prepare_data(comment)
+        data["user_audio"] = audio_base64
+
         try:
-            if not hasattr(self, "ai_socket") or not self.ai_socket.open:
+            if (
+                not hasattr(self, "ai_socket")
+                or self.ai_socket is None
+                or not self.ai_socket.open
+            ):
                 self.ai_socket = await self.connect_to_ai()
-
-            data = await self.prepare_data(comment)
-
-            data["user_audio"] = audio_base64 
+                if self.ai_socket is None or not self.ai_socket.open:
+                    logger.warning(
+                        "AI websocket unavailable for chat %s, trying HTTP fallback",
+                        comment.chat_id,
+                    )
+                    return await self.send_message_to_ai_via_http(data)
             
             await self.ai_socket.send(json.dumps(data))
+            return True
         except Exception as e:
             logger.error(f"Error sending to AI: {e}")
+            return await self.send_message_to_ai_via_http(data)
+
+    async def send_message_to_ai_via_http(self, data):
+        def _post():
+            return requests.post(
+                "http://161.35.153.151:8080/bot/",
+                json=data,
+                headers={
+                    "Accept": "*/*",
+                    "Content-Type": "application/json",
+                    "User-Agent": "Apofiz-WebSocket-Server-1.0",
+                },
+                timeout=30,
+            )
+
+        try:
+            response = await asyncio.to_thread(_post)
+            response.raise_for_status()
+            return True
+        except Exception as e:
+            logger.error(f"HTTP fallback to AI failed: {e}")
+            slack.slack_ai(f"[ WEBSOCKET error ] http fallback to AI failed: {e}")
+            return False
     
     @database_sync_to_async
     def create_user_comment_with_audio(self, text, chat, user, audio_base64=None, parent=None):
@@ -473,7 +513,13 @@ class CommentConsumer(AsyncWebsocketConsumer):
             slack.slack_ai(
                 f"[ WEBSOCKET error ] connection failed while attempt to AI socket {e}"
             )
-            await self.close()
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error connecting to AI socket: {e}")
+            slack.slack_ai(
+                f"[ WEBSOCKET error ] unexpected connection error to AI socket {e}"
+            )
+            return None
 
     async def send_message_to_ai(self, comment):
         try:

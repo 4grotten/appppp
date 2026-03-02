@@ -100,6 +100,13 @@ class CommentConsumer(AsyncWebsocketConsumer):
             assistant_id = data.get("assistant_id", None)
             user = self.scope["user"]
             chat = self.chat
+            logger.info(
+                "[WS_AI_FLOW] Incoming websocket message: chat_id=%s user_id=%s assistant_id=%s has_audio=%s",
+                chat.id,
+                getattr(user, "id", None),
+                assistant_id,
+                bool(user_audio_base64),
+            )
             
             # if msg_type == "save_ai_message" or data.get("assistant_id"):
             #     await self.handle_ai_response(data, user)
@@ -123,11 +130,23 @@ class CommentConsumer(AsyncWebsocketConsumer):
                             comment = await self.handle_user_response(data, user)
 
                             if comment:
+                                logger.info(
+                                    "[WS_AI_FLOW] User comment created, attempting AI transport: chat_id=%s comment_id=%s assistant_id=%s",
+                                    chat.id,
+                                    comment.id,
+                                    assistant.id,
+                                )
                                 ai_sent = await self.send_message_to_ai_with_audio(comment, user_audio_base64)
                                 if not ai_sent:
-                                    logger.warning(
-                                        "AI socket unavailable for chat %s, sending default assistant response",
+                                    logger.error(
+                                        "AI request failed on both transports; sending default response. "
+                                        "chat_id=%s org_id=%s assistant_id=%s user_id=%s comment_id=%s has_audio=%s",
                                         chat.id,
+                                        organization.id,
+                                        assistant.id,
+                                        user.id,
+                                        comment.id,
+                                        bool(user_audio_base64),
                                     )
                                     await self.handle_ai_default_response(parent=comment, user=user)
                             else:
@@ -330,6 +349,16 @@ class CommentConsumer(AsyncWebsocketConsumer):
     async def send_message_to_ai_with_audio(self, comment, audio_base64):
         data = await self.prepare_data(comment)
         data["user_audio"] = audio_base64
+        chat_id = data.get("chat_id")
+        parent_id = data.get("parent_id")
+        assistant_id = data.get("assistant_id")
+        logger.info(
+            "[WS_AI_FLOW] Preparing AI send: chat_id=%s parent_id=%s assistant_id=%s has_audio=%s",
+            chat_id,
+            parent_id,
+            assistant_id,
+            bool(audio_base64),
+        )
 
         try:
             if (
@@ -340,15 +369,32 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 self.ai_socket = await self.connect_to_ai()
                 if self.ai_socket is None or not self.ai_socket.open:
                     logger.warning(
-                        "AI websocket unavailable for chat %s, trying HTTP fallback",
-                        comment.chat_id,
+                        "AI websocket unavailable, switching to HTTP fallback. "
+                        "chat_id=%s parent_id=%s assistant_id=%s",
+                        chat_id,
+                        parent_id,
+                        assistant_id,
                     )
                     return await self.send_message_to_ai_via_http(data)
             
             await self.ai_socket.send(json.dumps(data))
+            logger.info(
+                "AI request sent via websocket. chat_id=%s parent_id=%s assistant_id=%s",
+                chat_id,
+                parent_id,
+                assistant_id,
+            )
             return True
         except Exception as e:
-            logger.error(f"Error sending to AI: {e}")
+            logger.error(
+                "AI websocket send failed, switching to HTTP fallback. "
+                "chat_id=%s parent_id=%s assistant_id=%s error=%s",
+                chat_id,
+                parent_id,
+                assistant_id,
+                e,
+                exc_info=True,
+            )
             return await self.send_message_to_ai_via_http(data)
 
     async def send_message_to_ai_via_http(self, data):
@@ -365,12 +411,55 @@ class CommentConsumer(AsyncWebsocketConsumer):
             )
 
         try:
+            logger.warning(
+                "AI HTTP fallback request started. chat_id=%s parent_id=%s assistant_id=%s",
+                data.get("chat_id"),
+                data.get("parent_id"),
+                data.get("assistant_id"),
+            )
             response = await asyncio.to_thread(_post)
             response.raise_for_status()
+            logger.info(
+                "AI HTTP fallback succeeded. chat_id=%s parent_id=%s assistant_id=%s status=%s",
+                data.get("chat_id"),
+                data.get("parent_id"),
+                data.get("assistant_id"),
+                response.status_code,
+            )
             return True
+        except requests.exceptions.HTTPError as e:
+            status_code = e.response.status_code if e.response is not None else None
+            body_preview = (
+                (e.response.text or "")[:400] if e.response is not None else ""
+            )
+            logger.error(
+                "AI HTTP fallback failed with HTTP error. "
+                "chat_id=%s parent_id=%s assistant_id=%s status=%s body=%s",
+                data.get("chat_id"),
+                data.get("parent_id"),
+                data.get("assistant_id"),
+                status_code,
+                body_preview,
+            )
+            slack.slack_ai(
+                "[ WEBSOCKET error ] http fallback http error: "
+                f"chat_id={data.get('chat_id')} status={status_code}"
+            )
+            return False
         except Exception as e:
-            logger.error(f"HTTP fallback to AI failed: {e}")
-            slack.slack_ai(f"[ WEBSOCKET error ] http fallback to AI failed: {e}")
+            logger.error(
+                "AI HTTP fallback failed with exception. "
+                "chat_id=%s parent_id=%s assistant_id=%s error=%s",
+                data.get("chat_id"),
+                data.get("parent_id"),
+                data.get("assistant_id"),
+                e,
+                exc_info=True,
+            )
+            slack.slack_ai(
+                "[ WEBSOCKET error ] http fallback exception: "
+                f"chat_id={data.get('chat_id')} error={e}"
+            )
             return False
     
     @database_sync_to_async

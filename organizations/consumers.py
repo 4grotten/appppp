@@ -106,8 +106,9 @@ class CommentConsumer(AsyncWebsocketConsumer):
             #     return
             
             assistant = await self.get_assistant_by_chat(chat=chat)
+            organization = await self.get_assistant_organization(assistant)
             ai_access_allowed = await self.organization_has_ai_access(
-                organization=assistant.organization,
+                organization=organization,
                 feature="web_chat_ai",
             )
             is_enabled = await self.get_chat_assistant_is_enabled_flag(chat=chat)
@@ -166,6 +167,10 @@ class CommentConsumer(AsyncWebsocketConsumer):
         return chat.assistant
 
     @database_sync_to_async
+    def get_assistant_organization(self, assistant):
+        return assistant.organization
+
+    @database_sync_to_async
     def user_has_active_assistant(cls, assistant):
         return UserAssistant.objects.filter(
             assistant=assistant, is_active=True
@@ -179,6 +184,10 @@ class CommentConsumer(AsyncWebsocketConsumer):
     def get_assistant(self, assistant_id):
         assistant = AssistantService.get(pk=assistant_id)
         return assistant
+
+    @database_sync_to_async
+    def get_assistant_organization(self, assistant):
+        return assistant.organization
 
     @database_sync_to_async
     def get_comment(self, comment_id):
@@ -863,8 +872,9 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
             parent_id = data.get("parent", None)
             assistant_id = data.get("assistant_id", None)
             assistant = await self.get_assistant(assistant_id)
+            organization = await self.get_assistant_organization(assistant)
             ai_access_allowed = await self.organization_has_ai_access(
-                organization=assistant.organization,
+                organization=organization,
                 feature="web_chat_ai",
             )
             if not ai_access_allowed:

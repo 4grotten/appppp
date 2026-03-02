@@ -1,4 +1,5 @@
 from django.db.models import Count, Q
+import logging
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import (
@@ -35,6 +36,9 @@ from shop.serializers.category_serializers import (
 )
 from shop.services.category_services import ItemSubcategoryService, ItemCategoryService
 from utils.translator import GoogleTranslator, GPTTranslator
+
+
+logger = logging.getLogger(__name__)
 
 
 class SelectedSubcategoryMixin:
@@ -243,6 +247,60 @@ class SubcategoryRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated, CanEditItemSubcategory)
     serializer_class = ItemSubcategorySerializer
     queryset = ItemSubcategory.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        subcategory_id = kwargs.get("pk")
+        user_id = getattr(request.user, "id", None)
+        sub_icon_value = request.data.get("sub_icon", "<not-provided>")
+
+        logger.info(
+            "[SubcategoryUpdate] PUT start: subcategory_id=%s user_id=%s sub_icon=%s data_keys=%s",
+            subcategory_id,
+            user_id,
+            sub_icon_value,
+            list(request.data.keys()),
+        )
+        print(
+            f"[SubcategoryUpdate][PUT] start subcategory_id={subcategory_id} "
+            f"user_id={user_id} sub_icon={sub_icon_value}"
+        )
+
+        response = super().update(request, *args, **kwargs)
+
+        logger.info(
+            "[SubcategoryUpdate] PUT success: subcategory_id=%s status=%s",
+            subcategory_id,
+            response.status_code,
+        )
+        print(f"[SubcategoryUpdate][PUT] success subcategory_id={subcategory_id} status={response.status_code}")
+        return response
+
+    def partial_update(self, request, *args, **kwargs):
+        subcategory_id = kwargs.get("pk")
+        user_id = getattr(request.user, "id", None)
+        sub_icon_value = request.data.get("sub_icon", "<not-provided>")
+
+        logger.info(
+            "[SubcategoryUpdate] PATCH start: subcategory_id=%s user_id=%s sub_icon=%s data_keys=%s",
+            subcategory_id,
+            user_id,
+            sub_icon_value,
+            list(request.data.keys()),
+        )
+        print(
+            f"[SubcategoryUpdate][PATCH] start subcategory_id={subcategory_id} "
+            f"user_id={user_id} sub_icon={sub_icon_value}"
+        )
+
+        response = super().partial_update(request, *args, **kwargs)
+
+        logger.info(
+            "[SubcategoryUpdate] PATCH success: subcategory_id=%s status=%s",
+            subcategory_id,
+            response.status_code,
+        )
+        print(f"[SubcategoryUpdate][PATCH] success subcategory_id={subcategory_id} status={response.status_code}")
+        return response
 
 
 class ItemSubcategoryCreateView(CreateAPIView):

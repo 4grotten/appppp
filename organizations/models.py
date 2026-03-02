@@ -276,6 +276,12 @@ class Organization(TimestampModel):
         blank=True,
         help_text="Excel файл с каталогом товаров",
     )
+    ai_trial_enabled = models.BooleanField(default=False)
+    ai_trial_started_at = models.DateTimeField(null=True, blank=True)
+    ai_trial_ends_at = models.DateTimeField(null=True, blank=True)
+    ai_trial_web_chat_enabled = models.BooleanField(default=True)
+    ai_trial_telegram_enabled = models.BooleanField(default=True)
+    ai_trial_whatsapp_enabled = models.BooleanField(default=True)
 
     objects = OrganizationManager()
     active_organizations = ActiveOrganizationManager()
@@ -318,6 +324,25 @@ class Organization(TimestampModel):
             ),
         )
         return full_location
+
+    def is_ai_trial_active(self, feature: str = "general") -> bool:
+        if not self.ai_trial_enabled:
+            return False
+
+        now = timezone.now()
+
+        if self.ai_trial_started_at and now < self.ai_trial_started_at:
+            return False
+
+        if not self.ai_trial_ends_at or now > self.ai_trial_ends_at:
+            return False
+
+        feature_flags = {
+            "web_chat_ai": self.ai_trial_web_chat_enabled,
+            "telegram_bot_ai": self.ai_trial_telegram_enabled,
+            "whatsapp_bot_ai": self.ai_trial_whatsapp_enabled,
+        }
+        return feature_flags.get(feature, True)
 
 
 class PaymentSystemMethod(TimestampModel):

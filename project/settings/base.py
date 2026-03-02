@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "messenger_bots.apps.MessengerBotsConfig",
     "otp_bot.apps.OtpBotConfig",
     "easycard_integration.apps.EasycardIntegrationConfig",
+    "apofiz_app_integration.apps.ApofizAppIntegrationConfig",
     "saved_contacts.apps.SavedContactsConfig",
 ]
 
@@ -674,6 +675,16 @@ OTP_BOT_AI_TEMPERATURE = config("OTP_BOT_AI_TEMPERATURE", default=0.7, cast=floa
 # EasyCard Integration Webhooks
 # Shared secret for HMAC verification of EasyCard webhooks
 EASYCARD_WEBHOOK_SECRET = config("EASYCARD_WEBHOOK_SECRET", default="change-me-in-production")
+APOFIZ_INTEGRATION_BASE_API_URL = config(
+    "APOFIZ_INTEGRATION_BASE_API_URL",
+    default="https://apofiz.com/api/v1",
+)
+APOFIZ_INTEGRATION_TOKEN = config("APOFIZ_INTEGRATION_TOKEN", default="")
+APOFIZ_INTEGRATION_TIMEOUT = config("APOFIZ_INTEGRATION_TIMEOUT", default=10, cast=int)
+APOFIZ_INTEGRATION_ORG_PAGE_BASE_URL = config(
+    "APOFIZ_INTEGRATION_ORG_PAGE_BASE_URL",
+    default="http://134.122.53.6:3010/organizations",
+)
 
 
 if DEBUG:

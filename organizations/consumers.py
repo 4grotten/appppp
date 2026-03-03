@@ -152,6 +152,12 @@ class CommentConsumer(AsyncWebsocketConsumer):
                             else:
                                 logger.error("Comment creation failed, skipping AI response.")
                         else:
+                            logger.info(
+                                "[WS_AI_FLOW] Incoming AI callback branch: chat_id=%s assistant_id=%s data_keys=%s",
+                                chat.id,
+                                assistant_id,
+                                list(data.keys()),
+                            )
                             await self.handle_ai_response(data, user)
                     else:
                         await self.handle_user_response(data, user)
@@ -511,6 +517,16 @@ class CommentConsumer(AsyncWebsocketConsumer):
             audio_base64 = data.get("audio", None)
             parent_id = data.get("parent", None)
             assistant_id = data.get("assistant_id", None)
+            logger.info(
+                "[WS_AI_FLOW] handle_ai_response started: chat_id=%s user_id=%s assistant_id=%s parent_id=%s has_text=%s text_len=%s has_audio=%s",
+                getattr(self.chat, "id", None),
+                getattr(user, "id", None),
+                assistant_id,
+                parent_id,
+                bool(text),
+                len(text or ""),
+                bool(audio_base64),
+            )
             # assistant = await self.get_assistant(assistant_id)
             # parent = await self.get_comment(parent_id)
             # chat = await self.get_chat_with_parent(parent)
@@ -529,11 +545,25 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 except Exception as e:
                     logger.warning(f"Parent comment {parent_id} not found: {e}. Saving without parent.")
                     parent = None
+            else:
+                logger.warning(
+                    "[WS_AI_FLOW] AI callback without parent_id: chat_id=%s assistant_id=%s",
+                    getattr(self.chat, "id", None),
+                    assistant_id,
+                )
 
             chat = self.chat
 
             comment = await self.create_comment_with_ai_response(
                 text, chat, assistant, parent, audio_base64
+            )
+            logger.info(
+                "[WS_AI_FLOW] AI comment persisted: chat_id=%s comment_id=%s parent_id=%s assistant_id=%s text_len=%s",
+                chat.id,
+                comment.id,
+                getattr(parent, "id", None),
+                assistant.id,
+                len(text or ""),
             )
             serialized_data = await self.serialize_assistant_data(
                 comment=comment, user=user
@@ -556,6 +586,12 @@ class CommentConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_send(
                 self.chat_group_name,
                 {"type": "chat_message", "message": serialized_data},
+            )
+            logger.info(
+                "[WS_AI_FLOW] AI comment broadcasted to group: group=%s chat_id=%s comment_id=%s",
+                self.chat_group_name,
+                chat.id,
+                comment.id,
             )
         except Exception as e:
             logger.error(f"Error handling AI response: {e}")
@@ -788,6 +824,10 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
     def get_assistant(self, assistant_id):
         assistant = AssistantService.get(pk=assistant_id)
         return assistant
+
+    @database_sync_to_async
+    def get_assistant_organization(self, assistant):
+        return assistant.organization
 
     @database_sync_to_async
     def get_comment(self, comment_id):

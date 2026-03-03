@@ -1104,7 +1104,8 @@ def cache_assistant_training_data():
             qa_pairs = training_data.get("answers", [])
             file_urls = []
             for qa in qa_pairs:
-                for file_url in (qa.get('files') or []):
+                files_to_read = qa.get('files_to_read') or qa.get('files') or []
+                for file_url in files_to_read:
                     if file_url:
                         file_urls.append(file_url)
 

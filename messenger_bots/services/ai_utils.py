@@ -183,7 +183,7 @@ def format_catalog_json(json_content) -> str:
         return text
 
     except Exception as e:
-        print(f"Error parsing catalog JSON: {e}")
+        logger.warning(f"[CATALOG] Error parsing catalog JSON: {e}")
         return ""
 
 
@@ -205,14 +205,14 @@ def read_file_from_url(file_url: str) -> str:
         parsed_url = urlparse(file_url)
         file_path = parsed_url.path.lower()
 
-        print(f"[READ_FILE] URL: {file_url[:100]}...")
-        print(f"[READ_FILE] File path: {file_path}, size: {len(file_content)} bytes")
+        logger.debug(f"[READ_FILE] URL: {file_url[:100]}...")
+        logger.info(f"[READ_FILE] File path={file_path}, size={len(file_content)} bytes")
 
         if file_path.endswith(".pdf") or ".pdf" in file_url.lower():
-            print("[READ_FILE] Detected PDF file")
+            logger.info("[READ_FILE] Detected PDF file")
             return extract_text_from_pdf(file_content)
         elif file_path.endswith(".docx") or ".docx" in file_url.lower():
-            print("[READ_FILE] Detected DOCX file")
+            logger.info("[READ_FILE] Detected DOCX file")
             return extract_text_from_docx(file_content)
         elif file_path.endswith(".json") or ".json" in file_url.lower():
             return format_catalog_json(file_content)
@@ -220,25 +220,25 @@ def read_file_from_url(file_url: str) -> str:
             try:
                 return file_content.decode("utf-8")[:5000]
             except UnicodeDecodeError:
-                print(f"Failed to decode file as UTF-8: {file_url}")
+                logger.warning(f"[READ_FILE] Failed to decode file as UTF-8: {file_url}")
                 return ""
         else:
             # Try to detect by content type or magic bytes
-            print("[READ_FILE] Unknown extension, trying to detect type...")
+            logger.info("[READ_FILE] Unknown extension, trying to detect type...")
             # PDF magic bytes: %PDF
             if file_content[:4] == b'%PDF':
-                print("[READ_FILE] Detected PDF by magic bytes")
+                logger.info("[READ_FILE] Detected PDF by magic bytes")
                 return extract_text_from_pdf(file_content)
             # DOCX is a ZIP file starting with PK
             elif file_content[:2] == b'PK':
-                print("[READ_FILE] Detected DOCX/ZIP by magic bytes")
+                logger.info("[READ_FILE] Detected DOCX/ZIP by magic bytes")
                 return extract_text_from_docx(file_content)
             else:
-                print(f"[READ_FILE] Unsupported file type: {file_path}")
+                logger.warning(f"[READ_FILE] Unsupported file type: {file_path}")
                 return ""
 
     except requests.exceptions.RequestException as e:
-        print(f"Error reading file from URL: {e}")
+        logger.warning(f"[READ_FILE] Error reading file from URL: {e}")
         return ""
 
 
@@ -420,39 +420,49 @@ def build_system_prompt(
         )
 
     # Add Q&A training data (KNOWLEDGE BASE)
-    print(f"[BUILD_PROMPT] qa_pairs count: {len(qa_pairs) if qa_pairs else 0}")
+    logger.info(f"[BUILD_PROMPT] qa_pairs_count={len(qa_pairs) if qa_pairs else 0}")
     if qa_pairs:
         prompt += "📚 KNOWLEDGE BASE (Primary source for specific questions):\n"
         prompt += "IMPORTANT: When user asks for a link/file mentioned in answers below, provide the File URL!\n\n"
         for qa in qa_pairs:
             question = qa.get('question') or ''
             answer = qa.get('answer') or ''
-            print(f"[BUILD_PROMPT] Adding Q&A: Q='{question[:50]}...' A='{answer[:50]}...'")
+            logger.debug(f"[BUILD_PROMPT] Adding Q&A: Q='{question[:50]}...' A='{answer[:50]}...'")
             if question and answer:
                 prompt += f"Q: {question}\nA: {answer}\n"
 
-            # Add file contents and URLs - use cached content if available
-            files = qa.get('files') or []
-            for file_url in files:
+            # Add file contents and URLs - support both new and legacy keys
+            files_to_read = qa.get('files_to_read') or qa.get('files') or []
+            files_to_send = qa.get('files_to_send') or []
+            logger.debug(
+                f"[BUILD_PROMPT] Q&A files: readable={len(files_to_read)}, send_only={len(files_to_send)}"
+            )
+
+            for file_url in files_to_read:
                 if file_url:
-                    # Always add the file URL so AI can share it
+                    # Add readable files: AI can share URL and use content
                     prompt += f"📎 File URL (share this when asked): {file_url}\n"
 
                     # Use cached content if available, otherwise download fresh
                     if cached_file_contents and file_url in cached_file_contents:
                         file_content = cached_file_contents[file_url]
-                        print(f"[BUILD_PROMPT] Using cached file content: {file_url[:50]}...")
+                        logger.debug(f"[BUILD_PROMPT] Using cached file content: {file_url[:50]}...")
                     else:
-                        print(f"[BUILD_PROMPT] Loading file (no cache): {file_url}")
+                        logger.info(f"[BUILD_PROMPT] Loading file (no cache): {file_url}")
                         file_content = read_file_from_url(file_url)
 
                     if file_content:
                         prompt += f"File content preview: {file_content[:1500]}\n"
                     else:
-                        print("[BUILD_PROMPT] WARNING: Could not read file content, but URL is added")
+                        logger.warning("[BUILD_PROMPT] Could not read file content, but URL is added")
+
+            # Add non-readable files as links only
+            for file_url in files_to_send:
+                if file_url:
+                    prompt += f"📎 File URL (share this when asked): {file_url}\n"
             prompt += "\n"
     else:
-        print("[BUILD_PROMPT] WARNING: No Q&A pairs provided!")
+        logger.warning("[BUILD_PROMPT] No Q&A pairs provided")
 
     # Add catalog with search rules
     if catalog_content:

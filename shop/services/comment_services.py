@@ -174,7 +174,16 @@ class CommentService:
                 else:
                     files_to_send.append(file_obj.file.url)
 
-            question_text = answer.question.text if answer.question else "Вопрос не указан"
+            question_text = (
+                (answer.question.text if answer.question else None)
+                or "Вопрос не указан"
+            )
+            question_preview = str(question_text)[:80]
+
+            logger.debug(
+                f"[TRAINING_DATA] answer_id={answer.id}, question='{question_preview}', "
+                f"files_to_read={len(files_to_read)}, files_to_send={len(files_to_send)}"
+            )
 
             logger.debug(
                 f"[TRAINING_DATA] answer_id={answer.id}, question='{question_text[:80]}', "

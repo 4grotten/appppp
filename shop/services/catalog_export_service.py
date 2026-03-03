@@ -4,6 +4,7 @@ import logging
 
 import pandas as pd
 from django.core.files.base import ContentFile
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -86,4 +87,6 @@ class CatalogExportService:
         logger.info(f"✅ Catalog Excel exported for Organization ID: {organization.id}")
         logger.info(f"   📁 Filename: {filename}")
         logger.info(f"   🔗 URL: {file_url}")
-        return file_url
+        cache_buster = int(timezone.now().timestamp())
+        separator = "&" if "?" in file_url else "?"
+        return f"{file_url}{separator}v={cache_buster}"

@@ -267,6 +267,8 @@ class OrganizationAdmin(admin.ModelAdmin):
                     "types",
                     "avg_check",
                     "show_contacts",
+                    "catalog_file",
+                    "catalog_excel_file",
                 )
             },
         ),

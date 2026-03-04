@@ -1,6 +1,8 @@
 import json
+import logging
 import os
 from datetime import datetime
+from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
@@ -9,6 +11,7 @@ from django.contrib.gis.db import models
 from django.forms.models import model_to_dict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import path
+from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from mapwidgets.widgets import GooglePointFieldWidget
@@ -70,6 +73,9 @@ from .models import (
     UserOrgSubscription,
     OpeningHours
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 @admin.register(CashbackGroup)
@@ -230,6 +236,7 @@ class OrganizationAdmin(admin.ModelAdmin):
         "cumulative_group",
         "items_group",
     )
+    actions = ("start_ai_trial_week", "disable_ai_trial")
 
     inlines = (
         PhoneInline,
@@ -260,6 +267,8 @@ class OrganizationAdmin(admin.ModelAdmin):
                     "types",
                     "avg_check",
                     "show_contacts",
+                    "catalog_file",
+                    "catalog_excel_file",
                 )
             },
         ),
@@ -312,6 +321,19 @@ class OrganizationAdmin(admin.ModelAdmin):
             },
         ),
         (
+            "AI Trial Access",
+            {
+                "fields": (
+                    "ai_trial_enabled",
+                    "ai_trial_started_at",
+                    "ai_trial_ends_at",
+                    "ai_trial_web_chat_enabled",
+                    "ai_trial_telegram_enabled",
+                    "ai_trial_whatsapp_enabled",
+                )
+            },
+        ),
+        (
             "Other configurations",
             {
                 "fields": (
@@ -326,7 +348,84 @@ class OrganizationAdmin(admin.ModelAdmin):
         ("Banners", {"fields": ("selected_banner", "banners")}),
     )
 
+    def start_ai_trial_week(self, request, queryset):
+        now = timezone.now()
+        org_ids = list(queryset.values_list("id", flat=True))
+        updated = queryset.update(
+            ai_trial_enabled=True,
+            ai_trial_started_at=now,
+            ai_trial_ends_at=now + timedelta(days=7),
+        )
+        logger.warning(
+            "[AI_TRIAL][ADMIN] start_week action by user_id=%s for org_ids=%s, updated=%s, starts_at=%s, ends_at=%s",
+            getattr(request.user, "id", None),
+            org_ids,
+            updated,
+            now,
+            now + timedelta(days=7),
+        )
+        self.message_user(
+            request,
+            f"7-day AI trial started for {updated} organization(s).",
+            level=messages.SUCCESS,
+        )
+
+    def disable_ai_trial(self, request, queryset):
+        org_ids = list(queryset.values_list("id", flat=True))
+        updated = queryset.update(ai_trial_enabled=False)
+        logger.warning(
+            "[AI_TRIAL][ADMIN] disable action by user_id=%s for org_ids=%s, updated=%s",
+            getattr(request.user, "id", None),
+            org_ids,
+            updated,
+        )
+        self.message_user(
+            request,
+            f"AI trial disabled for {updated} organization(s).",
+            level=messages.WARNING,
+        )
+
+    start_ai_trial_week.short_description = "Start 7-day AI trial for selected organizations"
+    disable_ai_trial.short_description = "Disable AI trial for selected organizations"
+
     def save_model(self, request, obj, form, change):
+        previous_obj = None
+        if change and obj.pk:
+            previous_obj = Organization.objects.filter(pk=obj.pk).first()
+
+        if previous_obj:
+            trial_changed = any(
+                [
+                    previous_obj.ai_trial_enabled != obj.ai_trial_enabled,
+                    previous_obj.ai_trial_started_at != obj.ai_trial_started_at,
+                    previous_obj.ai_trial_ends_at != obj.ai_trial_ends_at,
+                    previous_obj.ai_trial_web_chat_enabled
+                    != obj.ai_trial_web_chat_enabled,
+                    previous_obj.ai_trial_telegram_enabled
+                    != obj.ai_trial_telegram_enabled,
+                    previous_obj.ai_trial_whatsapp_enabled
+                    != obj.ai_trial_whatsapp_enabled,
+                ]
+            )
+            if trial_changed:
+                logger.warning(
+                    "[AI_TRIAL][ADMIN] manual update by user_id=%s for org_id=%s: enabled %s->%s, starts_at %s->%s, ends_at %s->%s, web %s->%s, tg %s->%s, wa %s->%s",
+                    getattr(request.user, "id", None),
+                    obj.pk,
+                    previous_obj.ai_trial_enabled,
+                    obj.ai_trial_enabled,
+                    previous_obj.ai_trial_started_at,
+                    obj.ai_trial_started_at,
+                    previous_obj.ai_trial_ends_at,
+                    obj.ai_trial_ends_at,
+                    previous_obj.ai_trial_web_chat_enabled,
+                    obj.ai_trial_web_chat_enabled,
+                    previous_obj.ai_trial_telegram_enabled,
+                    obj.ai_trial_telegram_enabled,
+                    previous_obj.ai_trial_whatsapp_enabled,
+                    obj.ai_trial_whatsapp_enabled,
+                )
+
         if not obj.avg_check == 0:
             obj.avg_check = None
         image_file = f"https://apofiz-media.s3.amazonaws.com/{obj.image.file.name}"

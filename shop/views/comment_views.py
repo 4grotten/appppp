@@ -14,7 +14,8 @@ from common.pagination import GeneralPagination
 from organizations.models import UserAssistant
 from organizations.serializers.assistant_serializers import ChatSettingsSerializer
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
-from organizations.services.assistant_services import ChatService, UserAssistantService
+from organizations.services.ai_access_service import check_ai_feature_access
+from organizations.services.assistant_services import ChatService
 from organizations.services.organization_services import OrganizationService
 from organizations.tasks import process_comment_with_assistant
 from shop.models import Comment, CommentComplaint, UserCommentTheme
@@ -174,7 +175,10 @@ class CommentChatListCreateView(ListCreateAPIView):
             if chat.chat_by_org_user:
                 comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat)
             else:
-                if UserAssistantService.user_has_active_assistant(assistant=chat.assistant):
+                if check_ai_feature_access(
+                    organization=chat.assistant.organization,
+                    feature="web_chat_ai",
+                ):
                     comment = CommentService.create_chat_comment_with_assistant_response(
                         **serializer.validated_data, chat=chat, request=request,user_audio_file=user_audio
                     )

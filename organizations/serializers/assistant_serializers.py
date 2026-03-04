@@ -1,4 +1,3 @@
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -17,6 +16,7 @@ from organizations.models import (
     Question,
     UserAssistant,
 )
+from organizations.services.ai_access_service import check_ai_feature_access
 from organizations.services.assistant_services import AssistantService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -122,26 +122,18 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
                 if longest_active_user_assistant.active_until
                 else None
             )
+
+        organization = assistant.organization
+        if organization.is_ai_trial_active():
+            return (
+                organization.ai_trial_ends_at.isoformat()
+                if organization.ai_trial_ends_at
+                else None
+            )
         return None
 
     def get_is_assistant_active(self, assistant):
-        user_assistants = UserAssistant.objects.filter(
-            assistant=assistant, is_active=True
-        )
-        if user_assistants.exists():
-            longest_active_user_assistant = user_assistants.order_by(
-                "-active_until"
-            ).first()
-            user_assistants.exclude(id=longest_active_user_assistant.id).update(
-                is_active=False
-            )
-
-            is_assistant_active = (
-                longest_active_user_assistant.active_until
-                and longest_active_user_assistant.active_until > timezone.now()
-            )
-            return is_assistant_active
-        return False
+        return check_ai_feature_access(assistant.organization)
 
     def get_plans(self, assistant):
         user_assistants = UserAssistant.objects.filter(

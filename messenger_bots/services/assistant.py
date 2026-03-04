@@ -19,6 +19,7 @@ CHAT_HISTORY_LIMIT = 5
 # AI Response caching settings
 RESPONSE_CACHE_TIMEOUT = 60 * 60  # 1 hour
 FREQUENCY_CACHE_TIMEOUT = 24 * 60 * 60  # 24 hours
+RESPONSE_CACHE_VERSION_KEY_PREFIX = "ai_response_ver"
 
 # Per-organization frequency threshold
 MIN_FREQUENCY_TO_CACHE = 3  # Cache after 3 identical questions per org
@@ -75,7 +76,12 @@ def get_response_cache_key(org_id: int, question: str) -> str:
     """Generate cache key for AI response."""
     normalized = normalize_question(question)
     question_hash = hashlib.md5(normalized.encode()).hexdigest()[:12]
-    return f"ai_response:{org_id}:{question_hash}"
+    version = cache.get(f"{RESPONSE_CACHE_VERSION_KEY_PREFIX}:{org_id}") or 1
+    cache_key = f"ai_response:{org_id}:v{version}:{question_hash}"
+    logger.debug(
+        f"[CACHE] Response key generated: org={org_id}, version={version}, hash={question_hash}"
+    )
+    return cache_key
 
 
 def get_frequency_cache_key(org_id: int, question: str) -> str:
@@ -653,7 +659,11 @@ class BotAssistantService:
                 for i, qa in enumerate(qa_pairs):
                     q_text = (qa.get('question') or '')[:50]
                     a_text = (qa.get('answer') or '')[:50]
-                    files_count = len(qa.get('files') or [])
+                    files_count = (
+                        len(qa.get('files_to_read') or [])
+                        + len(qa.get('files_to_send') or [])
+                        + len(qa.get('files') or [])
+                    )
                     print(f"[AI_ASSISTANT] Q&A {i+1}: Q='{q_text}' A='{a_text}' files={files_count}")
             marketing_info = training_data.get("marketing_info", [])
             item_info = training_data.get("item_info")

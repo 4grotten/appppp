@@ -5,6 +5,7 @@ import json
 import logging
 import re
 import uuid
+import requests
 
 from django.core.files.base import ContentFile
 
@@ -27,6 +28,7 @@ from organizations.services.assistant_services import (
     AssistantService,
     ChatService,
 )
+from organizations.services.ai_access_service import check_ai_feature_access
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem 
 
@@ -98,13 +100,24 @@ class CommentConsumer(AsyncWebsocketConsumer):
             assistant_id = data.get("assistant_id", None)
             user = self.scope["user"]
             chat = self.chat
+            logger.info(
+                "[WS_AI_FLOW] Incoming websocket message: chat_id=%s user_id=%s assistant_id=%s has_audio=%s",
+                chat.id,
+                getattr(user, "id", None),
+                assistant_id,
+                bool(user_audio_base64),
+            )
             
             # if msg_type == "save_ai_message" or data.get("assistant_id"):
             #     await self.handle_ai_response(data, user)
             #     return
             
             assistant = await self.get_assistant_by_chat(chat=chat)
-            user_has_active_assistant = await self.user_has_active_assistant(assistant=assistant)
+            organization = await self.get_assistant_organization(assistant)
+            ai_access_allowed = await self.organization_has_ai_access(
+                organization=organization,
+                feature="web_chat_ai",
+            )
             is_enabled = await self.get_chat_assistant_is_enabled_flag(chat=chat)
             chat_by_org_user = await self.get_chat_chat_org_by_user(chat=chat)
                 
@@ -112,15 +125,39 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 if chat_by_org_user:
                     await self.handle_user_response(data, user)
                 else:
-                    if user_has_active_assistant:
+                    if ai_access_allowed:
                         if assistant_id is None:
                             comment = await self.handle_user_response(data, user)
 
                             if comment:
-                                await self.send_message_to_ai_with_audio(comment, user_audio_base64)
+                                logger.info(
+                                    "[WS_AI_FLOW] User comment created, attempting AI transport: chat_id=%s comment_id=%s assistant_id=%s",
+                                    chat.id,
+                                    comment.id,
+                                    assistant.id,
+                                )
+                                ai_sent = await self.send_message_to_ai_with_audio(comment, user_audio_base64)
+                                if not ai_sent:
+                                    logger.error(
+                                        "AI request failed on both transports; sending default response. "
+                                        "chat_id=%s org_id=%s assistant_id=%s user_id=%s comment_id=%s has_audio=%s",
+                                        chat.id,
+                                        organization.id,
+                                        assistant.id,
+                                        user.id,
+                                        comment.id,
+                                        bool(user_audio_base64),
+                                    )
+                                    await self.handle_ai_default_response(parent=comment, user=user)
                             else:
                                 logger.error("Comment creation failed, skipping AI response.")
                         else:
+                            logger.info(
+                                "[WS_AI_FLOW] Incoming AI callback branch: chat_id=%s assistant_id=%s data_keys=%s",
+                                chat.id,
+                                assistant_id,
+                                list(data.keys()),
+                            )
                             await self.handle_ai_response(data, user)
                     else:
                         await self.handle_user_response(data, user)
@@ -155,15 +192,27 @@ class CommentConsumer(AsyncWebsocketConsumer):
         return chat.assistant
 
     @database_sync_to_async
+    def get_assistant_organization(self, assistant):
+        return assistant.organization
+
+    @database_sync_to_async
     def user_has_active_assistant(cls, assistant):
         return UserAssistant.objects.filter(
             assistant=assistant, is_active=True
         ).exists()
 
     @database_sync_to_async
+    def organization_has_ai_access(self, organization, feature):
+        return check_ai_feature_access(organization=organization, feature=feature)
+
+    @database_sync_to_async
     def get_assistant(self, assistant_id):
         assistant = AssistantService.get(pk=assistant_id)
         return assistant
+
+    @database_sync_to_async
+    def get_assistant_organization(self, assistant):
+        return assistant.organization
 
     @database_sync_to_async
     def get_comment(self, comment_id):
@@ -304,17 +353,120 @@ class CommentConsumer(AsyncWebsocketConsumer):
         return data
 
     async def send_message_to_ai_with_audio(self, comment, audio_base64):
+        data = await self.prepare_data(comment)
+        data["user_audio"] = audio_base64
+        chat_id = data.get("chat_id")
+        parent_id = data.get("parent_id")
+        assistant_id = data.get("assistant_id")
+        logger.info(
+            "[WS_AI_FLOW] Preparing AI send: chat_id=%s parent_id=%s assistant_id=%s has_audio=%s",
+            chat_id,
+            parent_id,
+            assistant_id,
+            bool(audio_base64),
+        )
+
         try:
-            if not hasattr(self, "ai_socket") or not self.ai_socket.open:
+            if (
+                not hasattr(self, "ai_socket")
+                or self.ai_socket is None
+                or not self.ai_socket.open
+            ):
                 self.ai_socket = await self.connect_to_ai()
-
-            data = await self.prepare_data(comment)
-
-            data["user_audio"] = audio_base64 
+                if self.ai_socket is None or not self.ai_socket.open:
+                    logger.warning(
+                        "AI websocket unavailable, switching to HTTP fallback. "
+                        "chat_id=%s parent_id=%s assistant_id=%s",
+                        chat_id,
+                        parent_id,
+                        assistant_id,
+                    )
+                    return await self.send_message_to_ai_via_http(data)
             
             await self.ai_socket.send(json.dumps(data))
+            logger.info(
+                "AI request sent via websocket. chat_id=%s parent_id=%s assistant_id=%s",
+                chat_id,
+                parent_id,
+                assistant_id,
+            )
+            return True
         except Exception as e:
-            logger.error(f"Error sending to AI: {e}")
+            logger.error(
+                "AI websocket send failed, switching to HTTP fallback. "
+                "chat_id=%s parent_id=%s assistant_id=%s error=%s",
+                chat_id,
+                parent_id,
+                assistant_id,
+                e,
+                exc_info=True,
+            )
+            return await self.send_message_to_ai_via_http(data)
+
+    async def send_message_to_ai_via_http(self, data):
+        def _post():
+            return requests.post(
+                "http://161.35.153.151:8080/bot/",
+                json=data,
+                headers={
+                    "Accept": "*/*",
+                    "Content-Type": "application/json",
+                    "User-Agent": "Apofiz-WebSocket-Server-1.0",
+                },
+                timeout=30,
+            )
+
+        try:
+            logger.warning(
+                "AI HTTP fallback request started. chat_id=%s parent_id=%s assistant_id=%s",
+                data.get("chat_id"),
+                data.get("parent_id"),
+                data.get("assistant_id"),
+            )
+            response = await asyncio.to_thread(_post)
+            response.raise_for_status()
+            logger.info(
+                "AI HTTP fallback succeeded. chat_id=%s parent_id=%s assistant_id=%s status=%s",
+                data.get("chat_id"),
+                data.get("parent_id"),
+                data.get("assistant_id"),
+                response.status_code,
+            )
+            return True
+        except requests.exceptions.HTTPError as e:
+            status_code = e.response.status_code if e.response is not None else None
+            body_preview = (
+                (e.response.text or "")[:400] if e.response is not None else ""
+            )
+            logger.error(
+                "AI HTTP fallback failed with HTTP error. "
+                "chat_id=%s parent_id=%s assistant_id=%s status=%s body=%s",
+                data.get("chat_id"),
+                data.get("parent_id"),
+                data.get("assistant_id"),
+                status_code,
+                body_preview,
+            )
+            slack.slack_ai(
+                "[ WEBSOCKET error ] http fallback http error: "
+                f"chat_id={data.get('chat_id')} status={status_code}"
+            )
+            return False
+        except Exception as e:
+            logger.error(
+                "AI HTTP fallback failed with exception. "
+                "chat_id=%s parent_id=%s assistant_id=%s error=%s",
+                data.get("chat_id"),
+                data.get("parent_id"),
+                data.get("assistant_id"),
+                e,
+                exc_info=True,
+            )
+            slack.slack_ai(
+                "[ WEBSOCKET error ] http fallback exception: "
+                f"chat_id={data.get('chat_id')} error={e}"
+            )
+            return False
     
     @database_sync_to_async
     def create_user_comment_with_audio(self, text, chat, user, audio_base64=None, parent=None):
@@ -365,6 +517,16 @@ class CommentConsumer(AsyncWebsocketConsumer):
             audio_base64 = data.get("audio", None)
             parent_id = data.get("parent", None)
             assistant_id = data.get("assistant_id", None)
+            logger.info(
+                "[WS_AI_FLOW] handle_ai_response started: chat_id=%s user_id=%s assistant_id=%s parent_id=%s has_text=%s text_len=%s has_audio=%s",
+                getattr(self.chat, "id", None),
+                getattr(user, "id", None),
+                assistant_id,
+                parent_id,
+                bool(text),
+                len(text or ""),
+                bool(audio_base64),
+            )
             # assistant = await self.get_assistant(assistant_id)
             # parent = await self.get_comment(parent_id)
             # chat = await self.get_chat_with_parent(parent)
@@ -383,11 +545,25 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 except Exception as e:
                     logger.warning(f"Parent comment {parent_id} not found: {e}. Saving without parent.")
                     parent = None
+            else:
+                logger.warning(
+                    "[WS_AI_FLOW] AI callback without parent_id: chat_id=%s assistant_id=%s",
+                    getattr(self.chat, "id", None),
+                    assistant_id,
+                )
 
             chat = self.chat
 
             comment = await self.create_comment_with_ai_response(
                 text, chat, assistant, parent, audio_base64
+            )
+            logger.info(
+                "[WS_AI_FLOW] AI comment persisted: chat_id=%s comment_id=%s parent_id=%s assistant_id=%s text_len=%s",
+                chat.id,
+                comment.id,
+                getattr(parent, "id", None),
+                assistant.id,
+                len(text or ""),
             )
             serialized_data = await self.serialize_assistant_data(
                 comment=comment, user=user
@@ -410,6 +586,12 @@ class CommentConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_send(
                 self.chat_group_name,
                 {"type": "chat_message", "message": serialized_data},
+            )
+            logger.info(
+                "[WS_AI_FLOW] AI comment broadcasted to group: group=%s chat_id=%s comment_id=%s",
+                self.chat_group_name,
+                chat.id,
+                comment.id,
             )
         except Exception as e:
             logger.error(f"Error handling AI response: {e}")
@@ -465,7 +647,13 @@ class CommentConsumer(AsyncWebsocketConsumer):
             slack.slack_ai(
                 f"[ WEBSOCKET error ] connection failed while attempt to AI socket {e}"
             )
-            await self.close()
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error connecting to AI socket: {e}")
+            slack.slack_ai(
+                f"[ WEBSOCKET error ] unexpected connection error to AI socket {e}"
+            )
+            return None
 
     async def send_message_to_ai(self, comment):
         try:
@@ -574,17 +762,18 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
                     organization=organization
                 )
                 logger.info("Current assistant: %s", assistant)
-                user_has_active_assistant = await self.user_has_active_assistant(
-                    assistant=assistant
+                ai_access_allowed = await self.organization_has_ai_access(
+                    organization=organization,
+                    feature="web_chat_ai",
                 )
-                logger.info("User has active assistant: %s", user_has_active_assistant)
+                logger.info("AI access allowed: %s", ai_access_allowed)
                 is_enabled = await self.get_assistant_is_enabled_flag(
                     assistant=assistant
                 )
                 logger.info("Chat assistant is enabled: %s", is_enabled)
                 if is_enabled:
                     logger.info("Chat assistant is enabled.")
-                    if user_has_active_assistant:
+                    if ai_access_allowed:
                         await self.send_message_to_item_ai(comment)
                         logger.info("Sent message to AI.")
 
@@ -628,9 +817,17 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
         ).exists()
 
     @database_sync_to_async
+    def organization_has_ai_access(self, organization, feature):
+        return check_ai_feature_access(organization=organization, feature=feature)
+
+    @database_sync_to_async
     def get_assistant(self, assistant_id):
         assistant = AssistantService.get(pk=assistant_id)
         return assistant
+
+    @database_sync_to_async
+    def get_assistant_organization(self, assistant):
+        return assistant.organization
 
     @database_sync_to_async
     def get_comment(self, comment_id):
@@ -804,6 +1001,14 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
             parent_id = data.get("parent", None)
             assistant_id = data.get("assistant_id", None)
             assistant = await self.get_assistant(assistant_id)
+            organization = await self.get_assistant_organization(assistant)
+            ai_access_allowed = await self.organization_has_ai_access(
+                organization=organization,
+                feature="web_chat_ai",
+            )
+            if not ai_access_allowed:
+                logger.info("AI access denied for org %s in item chat", assistant.organization_id)
+                return
             parent = await self.get_comment(parent_id)
             item = await self.get_item_with_parent(parent)
             comment = await self.create_item_comment_with_ai_response(

@@ -838,7 +838,10 @@ class TelegramBotService:
 
         # Check if organization subscription is active
         from messenger_bots.services.subscription_check import check_subscription_active
-        if not check_subscription_active(telegram_bot.organization):
+        if not check_subscription_active(
+            telegram_bot.organization,
+            feature="telegram_bot_ai",
+        ):
             logger.info(f"[TG_SERVICE] Subscription expired for org {telegram_bot.organization_id}, skipping AI response")
             return None
 

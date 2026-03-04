@@ -84,6 +84,11 @@ class AssistantDataService:
         ).select_related('currency', 'subcategory')
 
         data_list = []
+        organization_currency_code = (
+            organization.currency.code
+            if getattr(organization, "currency", None)
+            else ""
+        )
         for item in items:
             item_data = {
                 "id": item.id,
@@ -92,7 +97,7 @@ class AssistantDataService:
                 "price": float(item.price) if item.price else "",
                 "discount": float(item.discount) if item.discount else "",
                 "discount_price": float(item.discounted_price) if item.discounted_price else "",
-                "currency": item.currency.code if item.currency else "",
+                "currency": item.currency.code if item.currency else organization_currency_code,
                 "category": item.subcategory.name if item.subcategory else "General",
                 "type": item.purchase_type,
                 "available": True,

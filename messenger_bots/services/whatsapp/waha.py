@@ -8,6 +8,7 @@ Docs: https://waha.devlike.pro/docs/
 import hashlib
 import hmac
 import logging
+import base64
 from typing import Any, Dict, Optional
 
 import requests
@@ -243,10 +244,11 @@ class WAHAService(WhatsAppServiceInterface):
                 self.session_name,
             )
             response = self._make_request(
-                "GET", f"/api/{self.session_name}/auth/qr", timeout=(5, 10)
+                "GET", f"/api/{self.session_name}/auth/qr?format=raw", timeout=(5, 10)
             )
-            # WAHA returns {"value": "base64_qr_data"}
-            qr_value = response.get("value") if isinstance(response, dict) else None
+            qr_value = None
+            if isinstance(response, dict):
+                qr_value = response.get("value") or response.get("qr")
             logger.info(
                 "[WAHA] QR fetch result: org_id=%s session_name=%s has_qr=%s response_keys=%s",
                 self.bot.organization_id,
@@ -254,6 +256,27 @@ class WAHAService(WhatsAppServiceInterface):
                 bool(qr_value),
                 list(response.keys()) if isinstance(response, dict) else type(response).__name__,
             )
+            if qr_value:
+                return qr_value
+
+            # Fallback: some WAHA builds return image/png by default without JSON body
+            image_response = waha_request(
+                method="GET",
+                url=f"{self.base_url}/api/{self.session_name}/auth/qr",
+                timeout=(5, 10),
+            )
+            image_response.raise_for_status()
+            content_type = image_response.headers.get("Content-Type", "")
+            if "image" in content_type and image_response.content:
+                encoded = base64.b64encode(image_response.content).decode("utf-8")
+                logger.info(
+                    "[WAHA] QR image fallback success: org_id=%s session_name=%s bytes=%s",
+                    self.bot.organization_id,
+                    self.session_name,
+                    len(image_response.content),
+                )
+                return encoded
+
             return qr_value
         except Exception as e:
             logger.error(

@@ -1911,6 +1911,9 @@ class WhatsAppWAHAQRCodeAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        service = WhatsAppServiceFactory.get_service(bot)
+        connection_status = service.check_connection()
+
         # Check if already authenticated
         if bot.session_status == WhatsAppSessionStatus.AUTHENTICATED:
             logger.info("[WAHA_API] QR skip: already authenticated org_id=%s", organization_id)
@@ -1923,8 +1926,6 @@ class WhatsAppWAHAQRCodeAPIView(APIView):
                 "last_error": bot.last_error,
             })
 
-        service = WhatsAppServiceFactory.get_service(bot)
-        connection_status = service.check_connection()
         logger.info(
             "[WAHA_API] QR pre-check org_id=%s db_status=%s waha_status=%s last_error=%s",
             organization_id,

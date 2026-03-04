@@ -78,6 +78,14 @@ class WAHAService(WhatsAppServiceInterface):
             requests.exceptions.RequestException: On network errors
         """
         url = f"{self.base_url}{endpoint}"
+        logger.debug(
+            "[WAHA] Request start: method=%s endpoint=%s session=%s timeout=%s has_payload=%s",
+            method,
+            endpoint,
+            self.session_name,
+            timeout,
+            data is not None,
+        )
         try:
             response = waha_request(
                 method=method,
@@ -86,12 +94,43 @@ class WAHAService(WhatsAppServiceInterface):
                 timeout=timeout,
             )
             response.raise_for_status()
-            return response.json() if response.text else {}
+            response_data = response.json() if response.text else {}
+            logger.debug(
+                "[WAHA] Request success: method=%s endpoint=%s session=%s status_code=%s response_keys=%s",
+                method,
+                endpoint,
+                self.session_name,
+                response.status_code,
+                list(response_data.keys()) if isinstance(response_data, dict) else type(response_data).__name__,
+            )
+            return response_data
         except requests.exceptions.Timeout:
-            logger.error(f"[WAHA] Request timeout: {method} {endpoint}")
+            logger.error(
+                "[WAHA] Request timeout: method=%s endpoint=%s session=%s timeout=%s",
+                method,
+                endpoint,
+                self.session_name,
+                timeout,
+            )
             raise
         except requests.exceptions.RequestException as e:
-            logger.error(f"[WAHA] Request error: {method} {endpoint} - {e}")
+            response = getattr(e, "response", None)
+            status_code = getattr(response, "status_code", None)
+            response_text = ""
+            if response is not None:
+                try:
+                    response_text = (response.text or "")[:500]
+                except Exception:
+                    response_text = ""
+            logger.error(
+                "[WAHA] Request error: method=%s endpoint=%s session=%s status_code=%s error=%s response=%s",
+                method,
+                endpoint,
+                self.session_name,
+                status_code,
+                e,
+                response_text,
+            )
             raise
 
     def is_healthy(self) -> bool:
@@ -115,6 +154,12 @@ class WAHAService(WhatsAppServiceInterface):
         """
         try:
             backend_url = getattr(settings, "BACKEND_URL", "https://api.appofiz.com")
+            logger.info(
+                "[WAHA] Starting session: org_id=%s session_name=%s backend_url=%s",
+                self.bot.organization_id,
+                self.session_name,
+                backend_url,
+            )
 
             # Upsert and Start session (creates if not exists, starts if exists)
             self._make_request(
@@ -192,25 +237,57 @@ class WAHAService(WhatsAppServiceInterface):
             Base64 encoded QR image, or None on error
         """
         try:
+            logger.info(
+                "[WAHA] Fetching QR: org_id=%s session_name=%s",
+                self.bot.organization_id,
+                self.session_name,
+            )
             response = self._make_request(
                 "GET", f"/api/{self.session_name}/auth/qr", timeout=(5, 10)
             )
             # WAHA returns {"value": "base64_qr_data"}
-            return response.get("value")
+            qr_value = response.get("value") if isinstance(response, dict) else None
+            logger.info(
+                "[WAHA] QR fetch result: org_id=%s session_name=%s has_qr=%s response_keys=%s",
+                self.bot.organization_id,
+                self.session_name,
+                bool(qr_value),
+                list(response.keys()) if isinstance(response, dict) else type(response).__name__,
+            )
+            return qr_value
         except Exception as e:
-            logger.error(f"Failed to get QR code: {e}")
+            logger.error(
+                "Failed to get QR code: org_id=%s session_name=%s error=%s",
+                self.bot.organization_id,
+                self.session_name,
+                e,
+            )
             return None
 
     def check_connection(self) -> Dict[str, Any]:
         """Check session connection status."""
         try:
             response = self._make_request("GET", f"/api/sessions/{self.session_name}")
-            return {
+            result = {
                 "status": response.get("status"),
                 "name": response.get("name"),
                 "me": response.get("me"),  # Connected phone info
             }
+            logger.debug(
+                "[WAHA] Connection status: org_id=%s session_name=%s status=%s has_me=%s",
+                self.bot.organization_id,
+                self.session_name,
+                result.get("status"),
+                bool(result.get("me")),
+            )
+            return result
         except Exception as e:
+            logger.error(
+                "[WAHA] Connection status failed: org_id=%s session_name=%s error=%s",
+                self.bot.organization_id,
+                self.session_name,
+                e,
+            )
             return {"status": "error", "error": str(e)}
 
     def send_message(self, message: WhatsAppMessage) -> WhatsAppResponse:

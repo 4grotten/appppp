@@ -61,7 +61,7 @@ class WhatsAppServiceInterface(ABC):
         Returns:
             WhatsAppResponse with success status and message_id
         """
-        pass
+        raise NotImplementedError("Subclasses must implement send_message")
 
     @abstractmethod
     def send_photo(
@@ -80,7 +80,7 @@ class WhatsAppServiceInterface(ABC):
         Returns:
             WhatsAppResponse with success status
         """
-        pass
+        raise NotImplementedError("Subclasses must implement send_photo")
 
     @abstractmethod
     def get_qr_code(self) -> Optional[str]:
@@ -89,7 +89,7 @@ class WhatsAppServiceInterface(ABC):
         Returns:
             Base64 encoded QR image or URL, None if not applicable
         """
-        pass
+        raise NotImplementedError("Subclasses must implement get_qr_code")
 
     @abstractmethod
     def check_connection(self) -> Dict[str, Any]:
@@ -98,7 +98,7 @@ class WhatsAppServiceInterface(ABC):
         Returns:
             Dict with status info (status, phone number, etc.)
         """
-        pass
+        raise NotImplementedError("Subclasses must implement check_connection")
 
     @abstractmethod
     def is_healthy(self) -> bool:
@@ -107,7 +107,7 @@ class WhatsAppServiceInterface(ABC):
         Returns:
             True if service is available and responding
         """
-        pass
+        raise NotImplementedError("Subclasses must implement is_healthy")
 
     @abstractmethod
     def start_session(self) -> bool:
@@ -116,7 +116,7 @@ class WhatsAppServiceInterface(ABC):
         Returns:
             True if session started successfully
         """
-        pass
+        raise NotImplementedError("Subclasses must implement start_session")
 
     @abstractmethod
     def stop_session(self) -> bool:
@@ -125,7 +125,7 @@ class WhatsAppServiceInterface(ABC):
         Returns:
             True if session stopped successfully
         """
-        pass
+        raise NotImplementedError("Subclasses must implement stop_session")
 
     @abstractmethod
     def process_webhook(self, data: Dict) -> Optional[WhatsAppIncomingMessage]:
@@ -137,7 +137,7 @@ class WhatsAppServiceInterface(ABC):
         Returns:
             Parsed WhatsAppIncomingMessage or None if not a message event
         """
-        pass
+        raise NotImplementedError("Subclasses must implement process_webhook")
 
     def verify_webhook_signature(self, payload: bytes, signature: str) -> bool:
         """Verify webhook signature (optional, implemented by providers).

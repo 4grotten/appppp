@@ -1742,6 +1742,7 @@ class WhatsAppWAHASessionAPIView(APIView):
 
     def get(self, request, organization_id):
         """Get current session status and QR code if available."""
+        logger.info("[WAHA_API] SESSION GET requested for org_id=%s", organization_id)
         org = self.get_organization(request, organization_id)
         if not org:
             return Response(
@@ -1763,11 +1764,23 @@ class WhatsAppWAHASessionAPIView(APIView):
         # Get live status from WAHA
         service = WhatsAppServiceFactory.get_service(bot)
         connection_status = service.check_connection()
+        logger.info(
+            "[WAHA_API] SESSION live status org_id=%s db_status=%s waha_status=%s",
+            organization_id,
+            bot.session_status,
+            connection_status.get("status") if isinstance(connection_status, dict) else None,
+        )
 
         # Get QR code if needed
         qr_code = None
         if bot.session_status in [WhatsAppSessionStatus.PENDING, WhatsAppSessionStatus.SCAN_QR]:
             qr_code = service.get_qr_code()
+            logger.info(
+                "[WAHA_API] SESSION QR probe org_id=%s db_status=%s has_qr=%s",
+                organization_id,
+                bot.session_status,
+                bool(qr_code),
+            )
 
         return Response({
             "session_name": bot.waha_session_name,
@@ -1781,6 +1794,7 @@ class WhatsAppWAHASessionAPIView(APIView):
 
     def post(self, request, organization_id):
         """Start or restart WAHA session."""
+        logger.info("[WAHA_API] SESSION POST start requested for org_id=%s", organization_id)
         org = self.get_organization(request, organization_id)
         if not org:
             return Response(
@@ -1804,6 +1818,7 @@ class WhatsAppWAHASessionAPIView(APIView):
         # Start session
         try:
             success = service.start_session()
+            logger.info("[WAHA_API] SESSION start result org_id=%s success=%s", organization_id, success)
             if success:
                 bot.session_status = WhatsAppSessionStatus.PENDING
                 bot.last_error = None
@@ -1815,6 +1830,7 @@ class WhatsAppWAHASessionAPIView(APIView):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
         except Exception as e:
+            logger.error("[WAHA_API] SESSION start exception org_id=%s error=%s", organization_id, e)
             bot.last_error = str(e)
             bot.save(update_fields=["last_error"])
             return Response(
@@ -1876,6 +1892,7 @@ class WhatsAppWAHAQRCodeAPIView(APIView):
 
     def get(self, request, organization_id):
         """Get QR code for WhatsApp authentication."""
+        logger.info("[WAHA_API] QR GET requested for org_id=%s", organization_id)
         org = self.get_organization(request, organization_id)
         if not org:
             return Response(
@@ -1896,13 +1913,25 @@ class WhatsAppWAHAQRCodeAPIView(APIView):
 
         # Check if already authenticated
         if bot.session_status == WhatsAppSessionStatus.AUTHENTICATED:
+            logger.info("[WAHA_API] QR skip: already authenticated org_id=%s", organization_id)
             return Response({
                 "qr_code": None,
                 "message": "Already authenticated",
                 "connected_phone": bot.connected_phone_number,
+                "session_status": bot.session_status,
+                "waha_status": connection_status,
+                "last_error": bot.last_error,
             })
 
         service = WhatsAppServiceFactory.get_service(bot)
+        connection_status = service.check_connection()
+        logger.info(
+            "[WAHA_API] QR pre-check org_id=%s db_status=%s waha_status=%s last_error=%s",
+            organization_id,
+            bot.session_status,
+            connection_status.get("status") if isinstance(connection_status, dict) else None,
+            bot.last_error,
+        )
         qr_code = service.get_qr_code()
 
         if qr_code:
@@ -1910,16 +1939,29 @@ class WhatsAppWAHAQRCodeAPIView(APIView):
             if bot.session_status == WhatsAppSessionStatus.PENDING:
                 bot.session_status = WhatsAppSessionStatus.SCAN_QR
                 bot.save(update_fields=["session_status"])
+                logger.info("[WAHA_API] QR state updated to scan_qr for org_id=%s", organization_id)
 
             return Response({
                 "qr_code": qr_code,
                 "message": "Scan this QR code with WhatsApp",
+                "session_status": bot.session_status,
+                "waha_status": connection_status,
+                "last_error": bot.last_error,
             })
         else:
+            logger.warning(
+                "[WAHA_API] QR unavailable org_id=%s db_status=%s waha_status=%s last_error=%s",
+                organization_id,
+                bot.session_status,
+                connection_status.get("status") if isinstance(connection_status, dict) else None,
+                bot.last_error,
+            )
             return Response({
                 "qr_code": None,
                 "message": "QR code not available. Try starting the session first.",
                 "session_status": bot.session_status,
+                "waha_status": connection_status,
+                "last_error": bot.last_error,
             })
 
 

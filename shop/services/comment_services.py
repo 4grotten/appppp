@@ -174,19 +174,36 @@ class CommentService:
                 else:
                     files_to_send.append(file_obj.file.url)
 
-            question_text = answer.question.text if answer.question else "Вопрос не указан"
+            question_text = (
+                (answer.question.text if answer.question else None)
+                or "Вопрос не указан"
+            )
+            question_preview = str(question_text)[:80]
+
+            logger.debug(
+                f"[TRAINING_DATA] answer_id={answer.id}, question='{question_preview}', "
+                f"files_to_read={len(files_to_read)}, files_to_send={len(files_to_send)}"
+            )
+
+            logger.debug(
+                f"[TRAINING_DATA] answer_id={answer.id}, question='{question_text[:80]}', "
+                f"files_to_read={len(files_to_read)}, files_to_send={len(files_to_send)}"
+            )
 
             training_data["answers"].append({
                 "question": question_text,
                 "answer": answer.text,
                 "files_to_read": files_to_read,
-                "files_to_send": files_to_send  
+                "files_to_send": files_to_send,
+                # Backward-compatible key used by prompt builder/cache task
+                "files": files_to_read,
             })
 
         logger.info(
             f"[TRAINING_DATA] Completed training data for assistant={assistant.id}: "
             f"catalog_url={catalog_url}, "
-            f"answers_count={len(training_data['answers'])}"
+            f"answers_count={len(training_data['answers'])}, "
+            f"marketing_count={len(marketing_info)}, coupons_count={len(coupons_info)}"
         )
         return training_data
 

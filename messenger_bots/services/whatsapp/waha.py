@@ -9,6 +9,7 @@ import hashlib
 import hmac
 import logging
 import base64
+import time
 from typing import Any, Dict, Optional
 
 import requests
@@ -243,41 +244,74 @@ class WAHAService(WhatsAppServiceInterface):
                 self.bot.organization_id,
                 self.session_name,
             )
-            response = self._make_request(
-                "GET", f"/api/{self.session_name}/auth/qr?format=raw", timeout=(5, 10)
-            )
-            qr_value = None
-            if isinstance(response, dict):
-                qr_value = response.get("value") or response.get("qr")
-            logger.info(
-                "[WAHA] QR fetch result: org_id=%s session_name=%s has_qr=%s response_keys=%s",
-                self.bot.organization_id,
-                self.session_name,
-                bool(qr_value),
-                list(response.keys()) if isinstance(response, dict) else type(response).__name__,
-            )
-            if qr_value:
-                return qr_value
+            for attempt in range(3):
+                try:
+                    response = self._make_request(
+                        "GET", f"/api/{self.session_name}/auth/qr?format=raw", timeout=(5, 10)
+                    )
+                    qr_value = None
+                    if isinstance(response, dict):
+                        qr_value = response.get("value") or response.get("qr")
+                    logger.info(
+                        "[WAHA] QR fetch result: org_id=%s session_name=%s has_qr=%s response_keys=%s attempt=%s",
+                        self.bot.organization_id,
+                        self.session_name,
+                        bool(qr_value),
+                        list(response.keys()) if isinstance(response, dict) else type(response).__name__,
+                        attempt + 1,
+                    )
+                    if qr_value:
+                        return qr_value
 
-            # Fallback: some WAHA builds return image/png by default without JSON body
-            image_response = waha_request(
-                method="GET",
-                url=f"{self.base_url}/api/{self.session_name}/auth/qr",
-                timeout=(5, 10),
-            )
-            image_response.raise_for_status()
-            content_type = image_response.headers.get("Content-Type", "")
-            if "image" in content_type and image_response.content:
-                encoded = base64.b64encode(image_response.content).decode("utf-8")
-                logger.info(
-                    "[WAHA] QR image fallback success: org_id=%s session_name=%s bytes=%s",
-                    self.bot.organization_id,
-                    self.session_name,
-                    len(image_response.content),
-                )
-                return encoded
+                    # Fallback: some WAHA builds return image/png by default without JSON body
+                    image_response = waha_request(
+                        method="GET",
+                        url=f"{self.base_url}/api/{self.session_name}/auth/qr",
+                        timeout=(5, 10),
+                    )
+                    image_response.raise_for_status()
+                    content_type = image_response.headers.get("Content-Type", "")
+                    if "image" in content_type and image_response.content:
+                        encoded = base64.b64encode(image_response.content).decode("utf-8")
+                        logger.info(
+                            "[WAHA] QR image fallback success: org_id=%s session_name=%s bytes=%s",
+                            self.bot.organization_id,
+                            self.session_name,
+                            len(image_response.content),
+                        )
+                        return encoded
+                    return qr_value
 
-            return qr_value
+                except requests.exceptions.HTTPError as http_error:
+                    status_code = getattr(getattr(http_error, "response", None), "status_code", None)
+                    if status_code == 422:
+                        connection = self.check_connection()
+                        current_status = connection.get("status") if isinstance(connection, dict) else None
+                        logger.warning(
+                            "[WAHA] QR 422: org_id=%s session_name=%s waha_status=%s attempt=%s",
+                            self.bot.organization_id,
+                            self.session_name,
+                            current_status,
+                            attempt + 1,
+                        )
+
+                        if current_status == "FAILED":
+                            logger.warning(
+                                "[WAHA] Recreating failed session before QR: org_id=%s session_name=%s",
+                                self.bot.organization_id,
+                                self.session_name,
+                            )
+                            self.delete_session()
+                            self.start_session()
+                        elif current_status in {"STOPPED", "STARTING", "CREATED"}:
+                            self.start_session()
+
+                        if attempt < 2:
+                            time.sleep(2)
+                            continue
+                    raise
+
+            return None
         except Exception as e:
             logger.error(
                 "Failed to get QR code: org_id=%s session_name=%s error=%s",

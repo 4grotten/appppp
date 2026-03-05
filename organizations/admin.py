@@ -432,6 +432,16 @@ class OrganizationAdmin(admin.ModelAdmin):
             previous_obj = Organization.objects.filter(pk=obj.pk).first()
 
         if previous_obj:
+            gemini_changed = previous_obj.gemini_enabled != obj.gemini_enabled
+            if gemini_changed:
+                logger.warning(
+                    "[GEMINI][ADMIN] manual update by user_id=%s for org_id=%s: gemini_enabled %s->%s",
+                    getattr(request.user, "id", None),
+                    obj.pk,
+                    previous_obj.gemini_enabled,
+                    obj.gemini_enabled,
+                )
+
             trial_changed = any(
                 [
                     previous_obj.ai_trial_enabled != obj.ai_trial_enabled,

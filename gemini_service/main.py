@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple
 import logging
 
 import httpx
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from schemas import GeminiAICreateImage
@@ -30,7 +30,7 @@ app.add_middleware(
 
 async def _is_gemini_enabled_for_org(organization_id: Optional[int]) -> Tuple[bool, Optional[str]]:
     if organization_id is None:
-        return True, None
+        return False, "organization_id_required"
 
     url = f"{DJANGO_INTERNAL_API_BASE_URL}/api/v1/internal/gemini/access/"
     try:
@@ -55,6 +55,7 @@ async def _is_gemini_enabled_for_org(organization_id: Optional[int]) -> Tuple[bo
 
 @app.post("/api/v2/gemini/generate/image")
 async def generate_image(
+    request: Request,
     # Файлы
     item_images: List[UploadFile] = File(None),
     background_images: List[UploadFile] = File(None),
@@ -74,6 +75,14 @@ async def generate_image(
     aspect_ratio: str = Form(...),
     organization_id: Optional[int] = Form(default=None),
 ):
+    if organization_id is None:
+        organization_id_raw = request.query_params.get("organization_id")
+        if organization_id_raw:
+            try:
+                organization_id = int(organization_id_raw)
+            except ValueError:
+                organization_id = None
+
     is_allowed, deny_reason = await _is_gemini_enabled_for_org(organization_id)
     if not is_allowed:
         logger.warning(
@@ -89,6 +98,8 @@ async def generate_image(
             },
             status_code=403,
         )
+
+    logger.info("[GEMINI_ACCESS] image allowed: org_id=%s", organization_id)
 
     try:
         # Создаем Pydantic объект для валидации и структурирования
@@ -130,11 +141,20 @@ async def generate_image(
 
 @app.post("/api/v2/gemini/generate/prompt")
 async def generate_prompt(
+    request: Request,
     desc_type: str,
     text: Optional[str] = Form(None),
     images: Optional[List[UploadFile]] = File(None),
     organization_id: Optional[int] = Form(default=None),
 ):
+    if organization_id is None:
+        organization_id_raw = request.query_params.get("organization_id")
+        if organization_id_raw:
+            try:
+                organization_id = int(organization_id_raw)
+            except ValueError:
+                organization_id = None
+
     is_allowed, deny_reason = await _is_gemini_enabled_for_org(organization_id)
     if not is_allowed:
         logger.warning(
@@ -150,6 +170,8 @@ async def generate_prompt(
             },
             status_code=403,
         )
+
+    logger.info("[GEMINI_ACCESS] prompt allowed: org_id=%s", organization_id)
 
     data = dict()
     data["pivot"] = text if text else None

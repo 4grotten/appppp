@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from transactions.views.transaction_views import OrgFollowersTransactionsListAPIView
 
 from .views.ai_description import GenerateDescriptionChatGPTAPIView
+from .views.internal_gemini import gemini_access_check_view
 from .views.assistant_views import (
     AnswerFileCreateView,
     AssistantChatReadMessages,
@@ -170,6 +171,11 @@ router.register(r'opening-hours', OpeningHoursViewSet, basename='opening-hours')
 
 
 organization_urls = [
+    path(
+        "internal/gemini/access/",
+        gemini_access_check_view,
+        name="internal_gemini_access_check",
+    ),
     path('organizations/<int:pk>/catalog-toggle/',
          OrganizationCatalogApiView.as_view()),
     path(

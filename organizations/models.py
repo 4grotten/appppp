@@ -282,6 +282,7 @@ class Organization(TimestampModel):
     ai_trial_web_chat_enabled = models.BooleanField(default=True)
     ai_trial_telegram_enabled = models.BooleanField(default=True)
     ai_trial_whatsapp_enabled = models.BooleanField(default=True)
+    gemini_enabled = models.BooleanField(default=False)
 
     objects = OrganizationManager()
     active_organizations = ActiveOrganizationManager()

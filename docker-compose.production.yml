@@ -27,7 +27,7 @@ services:
       - waha
     env_file: ./env/production.env
     volumes:
-      - .:/app
+      - ./media.:/app/media
       - ./static:/app/static
       - ./media:/app/media
     command: /gunicorn.sh

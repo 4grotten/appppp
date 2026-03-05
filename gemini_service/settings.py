@@ -47,6 +47,7 @@ PROXY_PASS = config("PROXY_PASS", None)
 PROXY_HOST = config("PROXY_HOST", None)
 PROXY_PORT = "1080"
 PRODUCTION = config("PRODUCTION", False, cast=bool)
+DJANGO_INTERNAL_API_BASE_URL = config("DJANGO_INTERNAL_API_BASE_URL", default="http://django:8000")
 
 
 # Model configuration

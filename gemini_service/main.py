@@ -1,11 +1,17 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
+import logging
 
+import httpx
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from schemas import GeminiAICreateImage
 from service import GeminiAIService
 from internal_router import internal_router 
+from settings import DJANGO_INTERNAL_API_BASE_URL
+
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     docs_url="/api/v2/docs",
@@ -20,6 +26,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+async def _is_gemini_enabled_for_org(organization_id: Optional[int]) -> Tuple[bool, Optional[str]]:
+    if organization_id is None:
+        return True, None
+
+    url = f"{DJANGO_INTERNAL_API_BASE_URL}/api/v1/internal/gemini/access/"
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            response = await client.get(
+                url,
+                params={"organization_id": organization_id},
+            )
+
+        if response.status_code == 404:
+            return False, "organization_not_found"
+        if response.status_code != 200:
+            return False, "internal_check_failed"
+
+        payload = response.json()
+        if bool(payload.get("allowed")):
+            return True, None
+        return False, payload.get("detail", "disabled")
+    except Exception:
+        return False, "internal_check_unavailable"
 
 
 @app.post("/api/v2/gemini/generate/image")
@@ -41,7 +72,24 @@ async def generate_image(
     discount_on_image: bool = Form(default=False),
     discount_description: Optional[str] = Form(default=None),
     aspect_ratio: str = Form(...),
+    organization_id: Optional[int] = Form(default=None),
 ):
+    is_allowed, deny_reason = await _is_gemini_enabled_for_org(organization_id)
+    if not is_allowed:
+        logger.warning(
+            "[GEMINI_ACCESS] image denied: org_id=%s reason=%s",
+            organization_id,
+            deny_reason,
+        )
+        return JSONResponse(
+            {
+                "detail": "Gemini access denied",
+                "reason": deny_reason,
+                "organization_id": organization_id,
+            },
+            status_code=403,
+        )
+
     try:
         # Создаем Pydantic объект для валидации и структурирования
         request_data = GeminiAICreateImage(
@@ -85,7 +133,24 @@ async def generate_prompt(
     desc_type: str,
     text: Optional[str] = Form(None),
     images: Optional[List[UploadFile]] = File(None),
+    organization_id: Optional[int] = Form(default=None),
 ):
+    is_allowed, deny_reason = await _is_gemini_enabled_for_org(organization_id)
+    if not is_allowed:
+        logger.warning(
+            "[GEMINI_ACCESS] prompt denied: org_id=%s reason=%s",
+            organization_id,
+            deny_reason,
+        )
+        return JSONResponse(
+            {
+                "detail": "Gemini access denied",
+                "reason": deny_reason,
+                "organization_id": organization_id,
+            },
+            status_code=403,
+        )
+
     data = dict()
     data["pivot"] = text if text else None
     data["images"] = images if images else None

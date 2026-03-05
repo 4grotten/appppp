@@ -236,7 +236,12 @@ class OrganizationAdmin(admin.ModelAdmin):
         "cumulative_group",
         "items_group",
     )
-    actions = ("start_ai_trial_week", "disable_ai_trial")
+    actions = (
+        "start_ai_trial_week",
+        "disable_ai_trial",
+        "enable_gemini",
+        "disable_gemini",
+    )
 
     inlines = (
         PhoneInline,
@@ -324,6 +329,7 @@ class OrganizationAdmin(admin.ModelAdmin):
             "AI Trial Access",
             {
                 "fields": (
+                    "gemini_enabled",
                     "ai_trial_enabled",
                     "ai_trial_started_at",
                     "ai_trial_ends_at",
@@ -385,8 +391,40 @@ class OrganizationAdmin(admin.ModelAdmin):
             level=messages.WARNING,
         )
 
+    def enable_gemini(self, request, queryset):
+        org_ids = list(queryset.values_list("id", flat=True))
+        updated = queryset.update(gemini_enabled=True)
+        logger.warning(
+            "[GEMINI][ADMIN] enable action by user_id=%s for org_ids=%s, updated=%s",
+            getattr(request.user, "id", None),
+            org_ids,
+            updated,
+        )
+        self.message_user(
+            request,
+            f"Gemini enabled for {updated} organization(s).",
+            level=messages.SUCCESS,
+        )
+
+    def disable_gemini(self, request, queryset):
+        org_ids = list(queryset.values_list("id", flat=True))
+        updated = queryset.update(gemini_enabled=False)
+        logger.warning(
+            "[GEMINI][ADMIN] disable action by user_id=%s for org_ids=%s, updated=%s",
+            getattr(request.user, "id", None),
+            org_ids,
+            updated,
+        )
+        self.message_user(
+            request,
+            f"Gemini disabled for {updated} organization(s).",
+            level=messages.WARNING,
+        )
+
     start_ai_trial_week.short_description = "Start 7-day AI trial for selected organizations"
     disable_ai_trial.short_description = "Disable AI trial for selected organizations"
+    enable_gemini.short_description = "Enable Gemini for selected organizations"
+    disable_gemini.short_description = "Disable Gemini for selected organizations"
 
     def save_model(self, request, obj, form, change):
         previous_obj = None

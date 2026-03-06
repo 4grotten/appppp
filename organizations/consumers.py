@@ -358,12 +358,28 @@ class CommentConsumer(AsyncWebsocketConsumer):
         chat_id = data.get("chat_id")
         parent_id = data.get("parent_id")
         assistant_id = data.get("assistant_id")
+        configured_openai_model = getattr(settings, "OPENAI_MODEL_NAME", "not_set")
+        ai_assistant_url = getattr(
+            settings,
+            "AI_ASSISTANT_URL",
+            "http://161.35.153.151:8080",
+        )
+        payload_model = data.get("model")
         logger.info(
             "[WS_AI_FLOW] Preparing AI send: chat_id=%s parent_id=%s assistant_id=%s has_audio=%s",
             chat_id,
             parent_id,
             assistant_id,
             bool(audio_base64),
+        )
+        logger.info(
+            "[WS_AI_FLOW] Model trace (request): chat_id=%s assistant_id=%s configured_openai_model=%s payload_model=%s model_source=%s ai_http_endpoint=%s",
+            chat_id,
+            assistant_id,
+            configured_openai_model,
+            payload_model,
+            "upstream_ai_server",
+            f"{ai_assistant_url}/bot/",
         )
 
         try:
@@ -517,6 +533,12 @@ class CommentConsumer(AsyncWebsocketConsumer):
             audio_base64 = data.get("audio", None)
             parent_id = data.get("parent", None)
             assistant_id = data.get("assistant_id", None)
+            callback_model = (
+                data.get("model")
+                or data.get("model_used")
+                or data.get("llm_model")
+                or "not_provided"
+            )
             logger.info(
                 "[WS_AI_FLOW] handle_ai_response started: chat_id=%s user_id=%s assistant_id=%s parent_id=%s has_text=%s text_len=%s has_audio=%s",
                 getattr(self.chat, "id", None),
@@ -526,6 +548,12 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 bool(text),
                 len(text or ""),
                 bool(audio_base64),
+            )
+            logger.info(
+                "[WS_AI_FLOW] Model trace (callback): chat_id=%s assistant_id=%s callback_model=%s",
+                getattr(self.chat, "id", None),
+                assistant_id,
+                callback_model,
             )
             # assistant = await self.get_assistant(assistant_id)
             # parent = await self.get_comment(parent_id)

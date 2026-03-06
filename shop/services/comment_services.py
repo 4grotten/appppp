@@ -1,5 +1,6 @@
 import time
 import logging
+import json
 import requests
 from django.conf import settings
 from django.db import transaction
@@ -204,6 +205,10 @@ class CommentService:
             f"catalog_url={catalog_url}, "
             f"answers_count={len(training_data['answers'])}, "
             f"marketing_count={len(marketing_info)}, coupons_count={len(coupons_info)}"
+        )
+        logger.info(
+            "[TRAINING_DATA_FULL_START]\n%s\n[TRAINING_DATA_FULL_END]",
+            json.dumps(training_data, ensure_ascii=False, indent=2),
         )
         return training_data
 

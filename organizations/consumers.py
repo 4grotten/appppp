@@ -113,14 +113,9 @@ class CommentConsumer(AsyncWebsocketConsumer):
             #     return
             
             assistant = await self.get_assistant_by_chat(chat=chat)
-<<<<<<< HEAD
             organization = await self.get_assistant_organization(assistant)
             ai_access_allowed = await self.organization_has_ai_access(
                 organization=organization,
-=======
-            ai_access_allowed = await self.organization_has_ai_access(
-                organization=assistant.organization,
->>>>>>> dev
                 feature="web_chat_ai",
             )
             is_enabled = await self.get_chat_assistant_is_enabled_flag(chat=chat)

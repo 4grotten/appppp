@@ -380,6 +380,8 @@ class CommentConsumer(AsyncWebsocketConsumer):
             payload_model,
             "upstream_ai_server",
             f"{ai_assistant_url}/bot/",
+        )
+        logger.info(
             "[WS_AI_PAYLOAD_FULL_START]\n%s\n[WS_AI_PAYLOAD_FULL_END]",
             json.dumps(convert_decimals(data), ensure_ascii=False, indent=2),
         )

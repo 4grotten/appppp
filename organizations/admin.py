@@ -236,16 +236,12 @@ class OrganizationAdmin(admin.ModelAdmin):
         "cumulative_group",
         "items_group",
     )
-<<<<<<< HEAD
     actions = (
         "start_ai_trial_week",
         "disable_ai_trial",
         "enable_gemini",
         "disable_gemini",
     )
-=======
-    actions = ("start_ai_trial_week", "disable_ai_trial")
->>>>>>> dev
 
     inlines = (
         PhoneInline,
@@ -333,10 +329,7 @@ class OrganizationAdmin(admin.ModelAdmin):
             "AI Trial Access",
             {
                 "fields": (
-<<<<<<< HEAD
                     "gemini_enabled",
-=======
->>>>>>> dev
                     "ai_trial_enabled",
                     "ai_trial_started_at",
                     "ai_trial_ends_at",

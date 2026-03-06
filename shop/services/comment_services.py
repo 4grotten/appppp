@@ -206,10 +206,19 @@ class CommentService:
             f"answers_count={len(training_data['answers'])}, "
             f"marketing_count={len(marketing_info)}, coupons_count={len(coupons_info)}"
         )
-        logger.info(
-            "[TRAINING_DATA_FULL_START]\n%s\n[TRAINING_DATA_FULL_END]",
-            json.dumps(training_data, ensure_ascii=False, indent=2),
-        )
+        try:
+            training_data_json = json.dumps(
+                training_data,
+                ensure_ascii=False,
+                default=str,
+            )
+            logger.info("[TRAINING_DATA_FULL_JSON_LENGTH] %s", len(training_data_json))
+            logger.info(
+                "[TRAINING_DATA_FULL_START]%s[TRAINING_DATA_FULL_END]",
+                training_data_json,
+            )
+        except Exception as error:
+            logger.exception("[TRAINING_DATA_FULL_LOG_ERROR] %s", error)
         return training_data
 
     @classmethod

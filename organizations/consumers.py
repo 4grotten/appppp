@@ -381,10 +381,19 @@ class CommentConsumer(AsyncWebsocketConsumer):
             "upstream_ai_server",
             f"{ai_assistant_url}/bot/",
         )
-        logger.info(
-            "[WS_AI_PAYLOAD_FULL_START]\n%s\n[WS_AI_PAYLOAD_FULL_END]",
-            json.dumps(convert_decimals(data), ensure_ascii=False, indent=2),
-        )
+        try:
+            payload_json = json.dumps(
+                convert_decimals(data),
+                ensure_ascii=False,
+                default=str,
+            )
+            logger.info("[WS_AI_PAYLOAD_FULL_JSON_LENGTH] %s", len(payload_json))
+            logger.info(
+                "[WS_AI_PAYLOAD_FULL_START]%s[WS_AI_PAYLOAD_FULL_END]",
+                payload_json,
+            )
+        except Exception as error:
+            logger.exception("[WS_AI_PAYLOAD_FULL_LOG_ERROR] %s", error)
 
         try:
             if (

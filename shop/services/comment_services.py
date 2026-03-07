@@ -93,6 +93,18 @@ class CommentService:
         assistant_info["ai_prompt"] = (
             f"{current_prompt}\n\n{vin_context}" if current_prompt else vin_context
         )
+
+        answers = training_data.setdefault("answers", [])
+        vin_answer = {
+            "question": f"VIN {vin}",
+            "answer": vin_context,
+            "files_to_read": [],
+            "files_to_send": [],
+            "files": [],
+        }
+        answers.insert(0, vin_answer)
+
+        training_data["vin_lookup_context"] = vin_context
         training_data["vin_lookup"] = {
             "detected": True,
             "vin": vin,

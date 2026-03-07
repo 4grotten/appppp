@@ -544,6 +544,12 @@ def call_openai(
         }
 
         print(f"[AI_UTILS] Calling OpenAI proxy at {proxy_url}")
+        logger.info(
+            "[AI_PROXY_MODEL_TRACE] Sending request with model=%s max_tokens=%s chat_history_items=%s",
+            model,
+            max_tokens,
+            len(chat_history) if isinstance(chat_history, list) else 0,
+        )
         session = get_http_session_with_retry()
         response = session.post(
             proxy_url,
@@ -554,6 +560,11 @@ def call_openai(
         result = response.json()
 
         if "answer" in result:
+            logger.info(
+                "[AI_PROXY_MODEL_TRACE] Response received for model=%s status=%s",
+                model,
+                response.status_code,
+            )
             answer = result["answer"]
             print(f"[AI_UTILS] OpenAI proxy response received: {len(answer)} chars")
             return answer

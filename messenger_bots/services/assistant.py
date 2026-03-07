@@ -708,11 +708,18 @@ class BotAssistantService:
             )
 
             # Call OpenAI API
+            selected_model = "gpt-4o-mini"
+            logger.info(
+                "[AI_ASSISTANT] Model trace: selected_model=%s org=%s assistant=%s",
+                selected_model,
+                organization_info.get("name", "unknown"),
+                assistant_info.get("name", "unknown"),
+            )
             answer = call_openai(
                 question=question,
                 system_prompt=system_prompt,
                 chat_history=chat_history,
-                model="gpt-4o-mini",  # 128k context, cheaper than gpt-3.5-turbo
+                model=selected_model,  # 128k context, cheaper than gpt-3.5-turbo
                 max_tokens=1500,
             )
 

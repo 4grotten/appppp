@@ -2,6 +2,7 @@ import time
 import logging
 import json
 import requests
+import re
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Max, Q
@@ -21,10 +22,88 @@ from notifications.tasks import sent_notification
 from shop.services.assistant_data_service import AssistantDataService
 
 logger = logging.getLogger(__name__)
+VIN_REGEX = re.compile(r"\b[A-HJ-NPR-Z0-9]{17}\b", re.IGNORECASE)
 
 
 class CommentService:
     model = Comment
+
+    @classmethod
+    def _extract_vin_from_text(cls, text: str):
+        match = VIN_REGEX.search(text or "")
+        if not match:
+            return None
+        return match.group(0).upper()
+
+    @classmethod
+    def _decode_vin_with_nhtsa(cls, vin: str):
+        url = f"https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVin/{vin}?format=json"
+        try:
+            response = requests.get(url, timeout=(5, 15))
+            response.raise_for_status()
+            payload = response.json()
+            results = payload.get("Results") or []
+
+            values = {}
+            for row in results:
+                variable = (row.get("Variable") or "").strip()
+                value = (row.get("Value") or "").strip()
+                if variable and value and value.upper() not in {"NULL", "NOT APPLICABLE"}:
+                    values[variable] = value
+
+            return {
+                "VIN": vin,
+                "Make": values.get("Make", ""),
+                "Model": values.get("Model", ""),
+                "Model Year": values.get("Model Year", ""),
+                "Vehicle Type": values.get("Vehicle Type", ""),
+                "Body Class": values.get("Body Class", ""),
+                "Manufacturer Name": values.get("Manufacturer Name", ""),
+                "Engine Model": values.get("Engine Model", ""),
+                "Plant Country": values.get("Plant Country", ""),
+                "Error Code": values.get("Error Code", ""),
+                "Error Text": values.get("Error Text", ""),
+            }
+        except Exception as error:
+            logger.warning("[TRAINING_DATA][VIN] DecodeVin failed for vin=%s: %s", vin, error)
+            return None
+
+    @classmethod
+    def _append_vin_context_to_training_data(cls, training_data: dict, user_message: str):
+        vin = cls._extract_vin_from_text(user_message)
+        if not vin:
+            return training_data
+
+        decoded = cls._decode_vin_with_nhtsa(vin)
+        if decoded:
+            lines = [f"- {key}: {value}" for key, value in decoded.items() if value]
+            vin_context = (
+                "VIN decode data from NHTSA DecodeVin API. "
+                "Use this as trusted source when user asks about VIN:\n"
+                + "\n".join(lines)
+            )
+        else:
+            vin_context = (
+                "VIN decode note: VIN detected in user message, but NHTSA DecodeVin API "
+                "did not return usable data. Ask user to verify VIN and try again."
+            )
+
+        assistant_info = training_data.setdefault("assistant_info", {})
+        current_prompt = assistant_info.get("ai_prompt") or ""
+        assistant_info["ai_prompt"] = (
+            f"{current_prompt}\n\n{vin_context}" if current_prompt else vin_context
+        )
+        training_data["vin_lookup"] = {
+            "detected": True,
+            "vin": vin,
+            "decoded": decoded or {},
+        }
+        logger.info(
+            "[TRAINING_DATA][VIN] VIN context added: vin=%s decoded=%s",
+            vin,
+            bool(decoded),
+        )
+        return training_data
 
     @classmethod
     def get(cls, **filters):
@@ -101,7 +180,7 @@ class CommentService:
         return comment
 
     @classmethod
-    def get_training_data(cls, assistant: Assistant):
+    def get_training_data(cls, assistant: Assistant, user_message: str = None):
         answers = Answer.objects.filter(assistant=assistant)
         org = Organization.objects.get(assistant=assistant)
         catalog_url = AssistantDataService.get_file_url(assistant.organization)
@@ -200,6 +279,12 @@ class CommentService:
                 "files": files_to_read,
             })
 
+        if user_message:
+            training_data = cls._append_vin_context_to_training_data(
+                training_data=training_data,
+                user_message=user_message,
+            )
+
         logger.info(
             f"[TRAINING_DATA] Completed training data for assistant={assistant.id}: "
             f"catalog_url={catalog_url}, "
@@ -257,7 +342,10 @@ class CommentService:
             "message": comment.text,
             "user_audio": user_audio_base64, 
             "host": host,
-            "training_data": cls.get_training_data(assistant=chat.assistant)
+            "training_data": cls.get_training_data(
+                assistant=chat.assistant,
+                user_message=comment.text,
+            )
         }
 
         sess = requests.Session()

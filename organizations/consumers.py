@@ -316,7 +316,8 @@ class CommentConsumer(AsyncWebsocketConsumer):
 
         # Get training data
         training_data = CommentService.get_training_data(
-            assistant=comment.chat.assistant
+            assistant=comment.chat.assistant,
+            user_message=comment.text,
         )
 
         # Add chat history for context (last 5 pairs = 10 messages)

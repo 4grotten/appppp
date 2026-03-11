@@ -663,6 +663,7 @@ OTP_MESSAGE_TEMPLATE = config(
 # ElevenLabs Configuration (Voice AI for OTP Bot)
 ELEVENLABS_API_KEY = config("ELEVENLABS_API_KEY", default="")
 ELEVENLABS_API_KEY2 = config("ELEVENLABS_API_KEY2", default="")
+ELEVENLABS_TOOL_API_KEY = config("ELEVENLABS_TOOL_API_KEY", default="")
 ELEVENLABS_VOICE_ID = config("ELEVENLABS_VOICE_ID", default="FGY2WhTYpPnrIDTdsKH5")  # Laura
 ELEVENLABS_MODEL_TTS = config("ELEVENLABS_MODEL_TTS", default="eleven_turbo_v2_5")
 ELEVENLABS_MODEL_STT = config("ELEVENLABS_MODEL_STT", default="scribe_v1")
@@ -791,3 +792,100 @@ JAZZMIN_UI_TWEAKS = {
         "success": "btn-success"
     }
 }
+
+
+
+
+
+class ElevenLabsGetShopItemToolView(APIView):
+    """
+    Client Tool endpoint for ElevenLabs agents.
+
+    Expected payload:
+    {
+        "query": "iphone",
+        "organization_id": 120,
+        "item_type": "product"  # optional: product|rent|ticket|resume
+    }
+    """
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        expected_key = getattr(settings, "ELEVENLABS_TOOL_API_KEY", "")
+        api_key = request.headers.get("X-ElevenLabs-Tool-Key", "")
+
+        if not expected_key:
+            return Response(
+                {"ok": False, "error": "Tool API key is not configured"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        if api_key != expected_key:
+            return Response(
+                {"ok": False, "error": "Unauthorized"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        query = (request.data.get("query") or request.data.get("keyword") or "").strip()
+        organization_id = request.data.get("organization_id")
+        item_type = (request.data.get("item_type") or "").strip().lower()
+        limit = min(int(request.data.get("limit", 5) or 5), 10)
+
+        if not query:
+            return Response(
+                {"ok": False, "error": "query is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        qs = ShopItem.objects.filter(
+            is_published=True,
+            is_hidden=False,
+            removed_at__isnull=True,
+            organization__is_active=True,
+            organization__is_deleted=False,
+        )
+
+        if organization_id:
+            qs = qs.filter(organization_id=organization_id)
+
+        if item_type in {"product", "rent", "ticket", "resume"}:
+            qs = qs.filter(purchase_type=item_type)
+
+        qs = qs.filter(
+            models.Q(name__icontains=query)
+            | models.Q(description__icontains=query)
+            | models.Q(article__icontains=query)
+        ).select_related("organization", "currency")[:limit]
+
+        results = []
+        for item in qs:
+            currency_code = ""
+            if item.currency:
+                currency_code = item.currency.code
+            elif getattr(item.organization, "currency", None):
+                currency_code = item.organization.currency.code
+
+            results.append(
+                {
+                    "id": item.id,
+                    "name": item.name,
+                    "description": (item.description or "")[:280],
+                    "price": float(item.price) if item.price is not None else None,
+                    "currency": currency_code,
+                    "item_type": item.purchase_type,
+                    "organization_id": item.organization_id,
+                    "organization_name": item.organization.title if item.organization else "",
+                    "url": f"{settings.SITE_URL}/p/{item.id}",
+                }
+            )
+
+        return Response(
+            {
+                "ok": True,
+                "query": query,
+                "count": len(results),
+                "results": results,
+            },
+            status=status.HTTP_200_OK,
+        )

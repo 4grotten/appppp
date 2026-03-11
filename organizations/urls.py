@@ -20,6 +20,7 @@ from .views.assistant_views import (
     PurchaseAssistantView,
     QuestionListView,
     ToggleAssistantEnableView, GetElevenLabsSignedUrlView, AssistantSettingsUpdateView, ProxyVoicesView,
+    ElevenLabsGetShopItemToolView,
 )
 from .views.attendance_views import (
     AttendanceStatsView,
@@ -837,6 +838,12 @@ coupon_urls = [
     path('elevenlabs/voices/',
          ProxyVoicesView.as_view(),
          name='elevenlabs-voices-list'),
+
+    path('elevenlabs/tools/get-shop-item/',
+        ElevenLabsGetShopItemToolView.as_view(),
+        name='elevenlabs-tool-get-shop-item'),
+
+
 
     path('assistant/<int:pk>/ai-prompt/',
          AssistantSettingsUpdateView.as_view(),

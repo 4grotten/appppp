@@ -15,6 +15,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from shop.tasks import update_assistant_json_task
+from shop.models import ShopItem
 from rest_framework.filters import SearchFilter
 
 logger = logging.getLogger(__name__)
@@ -449,6 +450,9 @@ class AssistantChatReadMessages(APIView):
         })
 
 
+
+#ELEVENLABS INTEGRATION VIEWS
+#=============================================================================================
 class GetElevenLabsSignedUrlView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -527,6 +531,91 @@ class ProxyVoicesView(APIView):
             return Response({"error": f"Failed to connect to AI server: {str(e)}"}, status=500)
 
 
+class ElevenLabsGetShopItemToolView(APIView):
+    """
+    Client tool endpoint for Eleven labs agents
+    
+    Expected payload:
+    {
+        search_query: str,
+        "organization_id": int,
+        item_type: "product" | "rent" | "ticket" | "resume"  # optional
+    }
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        expected_key = getattr(settings, "ELEVENLABS_TOOL_API_KEY", "")
+        api_key = request.headers.get("X-ElevenLabs-Tool-Key", "")
+
+        if not expected_key:
+            return Response({"status": False, "error": "ELEVENLABS_TOOL_API_KEY is not configured in server"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        if api_key != expected_key:
+            return Response({"status": False, "error": "Invalid API key or Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+
+        query = (request.data.get("search_query") or request.data.get("keyword") or request.data.get("query") or "").strip()
+        organiztion_id = request.data.get("organization_id")
+        item_type = (request.data.get("item_type") or "").strip.lower()
+        limit = min(int(request.data.get("limit", 5) or 5), 10)
+
+        if not query:
+            return Response({"status": False, "error": "search_query is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        qs = ShopItem.objects.filter(
+            is_published=True,
+            is_hidden=False,
+            removed_at__isnull=True,
+            organization__isactive=True,
+            organization__is_deleted=False,
+        )
+
+        if organiztion_id:
+            qs = qs.filter(organiztion_id=organiztion_id)
+
+        if item_type in {"product", "rent", "ticket", "resume"}:
+            qs = qs.filter(item_type=item_type)
+
+        qs = qs.filter(
+            models.Q(name__icontains=query) |
+            models.Q(description__icontains=query) |
+            models.Q(article__icontains=query)
+        ).select_related('organization', 'query')[:limit]
+
+        results = []
+        for item in qs:
+            currency_code = ""
+            if item.currency:
+                currency_code = item.currency.code
+            elif getattr(item.organization, 'currency', None):
+                currency_code = item.organization.currency.code
+
+            results.append(
+                {
+                    "id":item.id,
+                    "name": item.name,
+                    "description": (item.description or "")[:200],
+                    "price": float(item.price) if item.price is not None else None,
+                    "currency": currency_code,
+                    "item_type": item.purchase_type,
+                    "organization_id": item.organization_id,
+                    "organization_name": item.organization.title if item.organization else "",
+                    "url": f"{settings.SITE_URL}/p/{item.id}",
+                }
+            )
+        return Response(
+            {
+                "status": True,
+                "query": query,
+                "count": len(results),
+                "results": results,
+            }
+            status=status.HTTP_200_OK
+        )
+        
+#=============================================================================================
 class AssistantSettingsUpdateView(generics.UpdateAPIView):
     queryset = Assistant.objects.all()
     serializer_class = AssistantSettingsUpdateSerializer

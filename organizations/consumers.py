@@ -48,6 +48,18 @@ def convert_decimals(obj):
 
 class CommentConsumer(AsyncWebsocketConsumer):
 
+    @staticmethod
+    def parse_bool(value, default=False):
+        if value is None:
+            return default
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float)):
+            return bool(value)
+        if isinstance(value, str):
+            return value.strip().lower() in {"1", "true", "yes", "on"}
+        return default
+
     async def connect(self):
         try:
             self.chat_id = self.scope["url_route"]["kwargs"]["chat_id"]
@@ -98,15 +110,21 @@ class CommentConsumer(AsyncWebsocketConsumer):
             # msg_type = data.get("type")
             user_audio_base64 = data.get("user_audio", None)
             assistant_id = data.get("assistant_id", None)
+            skip_assistant_reply = self.parse_bool(data.get("skip_assistant_reply"), default=False)
             user = self.scope["user"]
             chat = self.chat
             logger.info(
-                "[WS_AI_FLOW] Incoming websocket message: chat_id=%s user_id=%s assistant_id=%s has_audio=%s",
+                "[WS_AI_FLOW] Incoming websocket message: chat_id=%s user_id=%s assistant_id=%s has_audio=%s skip_assistant_reply=%s",
                 chat.id,
                 getattr(user, "id", None),
                 assistant_id,
                 bool(user_audio_base64),
+                skip_assistant_reply,
             )
+
+            if skip_assistant_reply and assistant_id is None:
+                await self.handle_user_response(data, user)
+                return
             
             # if msg_type == "save_ai_message" or data.get("assistant_id"):
             #     await self.handle_ai_response(data, user)

@@ -349,7 +349,7 @@ class CommentLikeSerializer(serializers.ModelSerializer):
 
 class CommentCreateSerializer(serializers.ModelSerializer):
     user_audio = serializers.FileField(required=False, allow_null=True, write_only=True)
-    skip_assistant_reply = serializers.BooleanField(required=False, default=False, write_only=True)
+    skip_assistant_reply = serializers.BooleanField(required=False, default=False, write_only=False, read_only=False)
 
     class Meta:
         model = Comment

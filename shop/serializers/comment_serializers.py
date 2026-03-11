@@ -68,6 +68,7 @@ class WSParentCommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'organization', 'text')
 
 class WSCommentSerializer(serializers.ModelSerializer):
+    skip_assistant_reply = serializers.BooleanField(read_only=True, default=False)
     assistant = OrganizationAssistantSerializer()
     is_comment_liked = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
@@ -88,8 +89,8 @@ class WSCommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = (
             'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',"user_audio",
-            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source',"product_data","products",'audio'
-        ) #'product_image',
+            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source',"product_data","products","audio", 'skip_assistant_reply'
+        )
 
     def get_product_data(self, obj):
         """Returns first product found in text (for backwards compatibility)."""
@@ -217,6 +218,7 @@ class WSCommentSerializer(serializers.ModelSerializer):
         return BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
 class CommentSerializer(serializers.ModelSerializer):
+    skip_assistant_reply = serializers.BooleanField(read_only=True, default=False)
     assistant = OrganizationAssistantSerializer()
     is_comment_liked = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
@@ -237,7 +239,7 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',
             'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source',
-            'product_data', 'products','audio',"user_audio"
+            'product_data', 'products','audio',"user_audio", 'skip_assistant_reply'
         )
 
     def get_product_data(self, obj):
@@ -453,6 +455,7 @@ def _get_product_data_by_id(item_id):
 
 
 class BotMessageSerializer(serializers.ModelSerializer):
+    skip_assistant_reply = serializers.BooleanField(read_only=True, default=False)
     """
     Serializer for BotMessage (Telegram/WhatsApp messages).
     Returns data in unified format compatible with CommentSerializer.
@@ -477,7 +480,7 @@ class BotMessageSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role',
             'is_comment_liked', 'is_blocked', 'comment_like_count', 'can_delete',
-            'is_updated', 'created_at', 'updated_at', 'assistant', 'source', 'product_data', 'products'
+            'is_updated', 'created_at', 'updated_at', 'assistant', 'source', 'product_data', 'products', 'skip_assistant_reply'
         )
 
     def get_product_data(self, obj):

@@ -611,7 +611,7 @@ class ElevenLabsGetShopItemToolView(APIView):
                 "query": query,
                 "count": len(results),
                 "results": results,
-            }
+            },
             status=status.HTTP_200_OK
         )
         

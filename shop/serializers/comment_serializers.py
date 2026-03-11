@@ -348,9 +348,12 @@ class CommentLikeSerializer(serializers.ModelSerializer):
 
 
 class CommentCreateSerializer(serializers.ModelSerializer):
+    user_audio = serializers.FileField(required=False, allow_null=True, write_only=True)
+    skip_assistant_reply = serializers.BooleanField(required=False, default=False, write_only=True)
+
     class Meta:
         model = Comment
-        fields = ('parent', 'text')
+        fields = ('parent', 'text', 'user_audio', 'skip_assistant_reply')
 
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user

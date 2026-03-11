@@ -168,25 +168,35 @@ class CommentChatListCreateView(ListCreateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        validated_data = serializer.validated_data
+        validated_data = dict(serializer.validated_data)
         user_audio = validated_data.pop('user_audio', None) 
+        skip_assistant_reply = validated_data.pop('skip_assistant_reply', False)
+
+        if skip_assistant_reply:
+            comment = CommentService.create_chat_comment(
+                **validated_data,
+                chat=chat,
+                user_audio_file=user_audio,
+            )
+            data = self.serializer_class(comment, context={'request': request}).data
+            return Response(data, status=status.HTTP_201_CREATED)
 
         if chat.assistant.is_enabled:
             if chat.chat_by_org_user:
-                comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat)
+                comment = CommentService.create_chat_comment(**validated_data, chat=chat, user_audio_file=user_audio)
             else:
                 if check_ai_feature_access(
                     organization=chat.assistant.organization,
                     feature="web_chat_ai",
                 ):
                     comment = CommentService.create_chat_comment_with_assistant_response(
-                        **serializer.validated_data, chat=chat, request=request,user_audio_file=user_audio
+                        **validated_data, chat=chat, request=request, user_audio_file=user_audio
                     )
                 else:
-                    comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat,user_audio_file=user_audio)
+                    comment = CommentService.create_chat_comment(**validated_data, chat=chat, user_audio_file=user_audio)
         else:
             comment = CommentService.create_chat_comment_with_assistant_default_response(
-                **serializer.validated_data, chat=chat
+                **validated_data, chat=chat
             )
         data = self.serializer_class(comment, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)

@@ -144,7 +144,6 @@ class CommentService:
                     comment_id=comment.id,
                     comment_text=text)
             )
-
         return comment
 
     @classmethod

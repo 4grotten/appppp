@@ -1,9 +1,10 @@
 version: '3'
+
 volumes:
-  postgres_data_dev: { }
-  postgres_backup_dev: { }
-  waha_sessions: { }
-  waha_files: { }
+  postgres_data_dev: {}
+  postgres_backup_dev: {}
+  waha_sessions: {}
+  waha_files: {}
 
 services:
   django: &django
@@ -13,26 +14,23 @@ services:
     image: apofiz/backend
     ports:
       - "8000:8000"
-    links:
-      - postgres:postgres
-      - rabbitmq:rabbitmq
-      - memcached:memcached
-      - redis:redis
-      - waha:waha
     depends_on:
       - rabbitmq
       - postgres
       - memcached
       - redis
       - waha
-    env_file: ./env/production.env
+    env_file:
+      - ./env/production.env
     volumes:
-      - ./static:/app/static
+      - ./internal-static:/app/internal-static
       - ./media:/app/media
     command: /gunicorn.sh
     restart: always
+
   gemini-api:
-    build: ./gemini_service
+    build:
+      context: ./gemini_service
     ports:
       - "8002:8002"
     volumes:
@@ -41,82 +39,71 @@ services:
       - ./env/production.env
     restart: on-failure
 
-
   daphne:
-    build: .
+    image: apofiz/backend
     command: daphne -b 0.0.0.0 -p 8001 project.asgi:application
     ports:
       - "8001:8001"
-    env_file: ./env/production.env
+    env_file:
+      - ./env/production.env
     depends_on:
       - django
+    restart: always
 
   celery_worker_backend:
     <<: *django
-    ports: [ ]
+    ports: []
     command: celery worker -A project --loglevel=INFO -Q celery,default,messenger_bots
-    env_file: ./env/production.env
 
   celery_worker_high:
     <<: *django
-    ports: [ ]
-    command: celery worker -A project -n "thumbnails" --loglevel=INFO -Q high
-    env_file: ./env/production.env
+    ports: []
+    command: celery worker -A project -n thumbnails --loglevel=INFO -Q high
 
   celery_worker_instagram:
     <<: *django
-    ports: [ ]
-    command: celery worker -n "instagram" -A project --loglevel=INFO -Q insta_high,insta_low,update_login_device,\
-                                              delete_expired_video,delete_expired_posts
-    env_file: ./env/production.env
+    ports: []
+    command: >
+      celery worker -n instagram -A project --loglevel=INFO
+      -Q insta_high,insta_low,update_login_device,delete_expired_video,delete_expired_posts
 
   celery_worker_subscription:
     <<: *django
-    ports: [ ]
-    command: celery worker -n "subscription" -A project --loglevel=INFO -Q org_subscribers
-    env_file: ./env/production.env
-
-#  celery_worker_instagram:
-#    <<: *django
-#    ports: [ ]
-#    command: celery worker -n "instagram" -A project --loglevel=INFO -Q insta_high,insta_low --autoscale 16,4
-#    env_file: ./env/production.env
-#
-#  celery_worker_insta_video:
-#    <<: *django
-#    ports: [ ]
-#    command: celery worker -n "instagram_videos" -A project --loglevel=INFO -Q insta_video --autoscale 16,1
-#    env_file: ./env/production.env
+    ports: []
+    command: celery worker -n subscription -A project --loglevel=INFO -Q org_subscribers
 
   celery_beat:
     <<: *django
-    ports: [ ]
-    command: sh -c "rm -f /app/celerybeat.pid && celery -A project beat --schedule /app/beat.db --loglevel=INFO --pidfile=/app/celerybeat.pid"
-    env_file: ./env/production.env
+    ports: []
+    command: >
+      sh -c "rm -f /app/celerybeat.pid &&
+             celery -A project beat --schedule /app/beat.db --loglevel=INFO --pidfile=/app/celerybeat.pid"
 
   postgres:
     image: mdillon/postgis:10
-    #    ports:
-    #      - "0.0.0.0:5430:5432"
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
       - postgres_backup_dev:/backups
-    env_file: ./env/production.env
+    env_file:
+      - ./env/production.env
     restart: always
 
   rabbitmq:
     image: rabbitmq:3.8-alpine
-    env_file: ./env/production.env
+    env_file:
+      - ./env/production.env
     restart: always
 
   memcached:
     image: memcached:1.6-alpine
-    env_file: ./env/development.env
+    env_file:
+      - ./env/development.env
     restart: always
 
   redis:
     image: redis:6.2.6
-    env_file: ./env/production.env
+    env_file:
+      - ./env/production.env
     restart: always
 
   waha:
@@ -136,28 +123,26 @@ services:
     dns:
       - 8.8.8.8
       - 8.8.4.4
-    env_file: ./env/production.env
+    env_file:
+      - ./env/production.env
     environment:
-      # WAHA Plus Core Settings
-      - WAHA_DASHBOARD_ENABLED=true
-      - WHATSAPP_DEFAULT_ENGINE=NOWEB
-      - WAHA_LOG_LEVEL=info
-      - WAHA_API_KEY=${WAHA_API_KEY}
-      - WAHA_DASHBOARD_USERNAME=${WAHA_DASHBOARD_USERNAME}
-      - WAHA_DASHBOARD_PASSWORD=${WAHA_DASHBOARD_PASSWORD}
-      # Webhook Configuration
-      - WHATSAPP_HOOK_URL=https://apofiz.com/api/v1/messenger-bots/whatsapp/waha/webhook/
-      - WHATSAPP_HOOK_EVENTS=message,message.ack,message.reaction,session.status,message.waiting
-      # WAHA Plus Optimizations
-      - WAHA_WORKER_RESTART_SESSIONS=true
-      - WHATSAPP_RESTART_ALL_SESSIONS=true
-      - WAHA_PRINT_QR=false
-      - WHATSAPP_FILES_LIFETIME=180
+      WAHA_DASHBOARD_ENABLED: "true"
+      WHATSAPP_DEFAULT_ENGINE: NOWEB
+      WAHA_LOG_LEVEL: info
+      WAHA_API_KEY: ${WAHA_API_KEY}
+      WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USERNAME}
+      WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD}
+      WHATSAPP_HOOK_URL: https://apofiz.com/api/v1/messenger-bots/whatsapp/waha/webhook/
+      WHATSAPP_HOOK_EVENTS: message,message.ack,message.reaction,session.status,message.waiting
+      WAHA_WORKER_RESTART_SESSIONS: "true"
+      WHATSAPP_RESTART_ALL_SESSIONS: "true"
+      WAHA_PRINT_QR: "false"
+      WHATSAPP_FILES_LIFETIME: "180"
     volumes:
       - waha_sessions:/app/.sessions
       - waha_files:/app/.media
     healthcheck:
-      test: ["CMD", "curl", "-f","-H", "Authorization: X-Api-Key ${WAHA_API_KEY}", "http://localhost:3000/api/sessions"]
+      test: ["CMD", "curl", "-f", "-H", "Authorization: X-Api-Key ${WAHA_API_KEY}", "http://localhost:3000/api/sessions"]
       interval: 30s
       timeout: 10s
       retries: 3

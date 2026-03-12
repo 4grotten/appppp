@@ -28,7 +28,7 @@ class User(AbstractUser, TimestampModel):
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES, null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     avatar = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
-    username = models.CharField(max_length=255, null=True, blank=True)
+    username = models.CharField(max_length=255, null=True, blank=True, allow_blank=True)
     is_new_user = models.BooleanField(default=True)
     USERNAME_FIELD = 'phone_number'
     REQUIRED_FIELDS = []

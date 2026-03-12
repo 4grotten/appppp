@@ -970,14 +970,6 @@ def check_waha_session_health():
             is_healthy = service.is_healthy()
 
             if is_healthy:
-                if bot.session_status in [
-                    WhatsAppSessionStatus.FAILED,
-                    WhatsAppSessionStatus.DISCONNECTED,
-                ]:
-                    bot.session_status = WhatsAppSessionStatus.AUTHENTICATED
-                    bot.last_error = None
-                    bot.save(update_fields=["session_status", "last_error"])
-
                 results.append(
                     {
                         "org_id": bot.organization.id,

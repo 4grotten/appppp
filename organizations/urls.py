@@ -1,4 +1,5 @@
 from django.urls import include, path
+from .views.profitgate_views import ProfitgateWebhookAPIView
 from rest_framework.routers import DefaultRouter
 
 from transactions.views.transaction_views import OrgFollowersTransactionsListAPIView
@@ -874,4 +875,5 @@ urlpatterns = [
         "categories/<int:pk>/", CategoryDetailAPIView.as_view(), name="detail_category"
     ),
     path("org_seo/<int:pk>/", org_detail),
+    path('webhooks/profitgate/', ProfitgateWebhookAPIView.as_view(), name='profitgate_webhook')
 ]

@@ -60,6 +60,7 @@ from .models import (
     PaymentSystemMethod,
     PhoneNumber,
     Plan,
+    ProfitgateIntegration,
     PromoEditLog,
     PromoSubscriber,
     Question,
@@ -201,6 +202,14 @@ class AssistantInline(admin.StackedInline):
             return mark_safe(f'<img src="{obj.image.small.url}" style="max-width: 200px; max-height: 200px;" />')
     get_html_photo.short_description = "Превью"
 
+
+@admin.register(ProfitgateIntegration)
+class ProfitgateIntegrationAdmin(admin.ModelAdmin):
+    list_display = ('organization', 'merchant_id', 'endpoint_id', 'is_active')
+    search_fields = ('organization__name', 'merchant_id', 'endpoint_id')
+    list_filter = ('is_active',)
+
+
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     change_form_template = "admin/organization_change_form.html"
@@ -291,6 +300,7 @@ class OrganizationAdmin(admin.ModelAdmin):
                     "maaly_pay_activated",
                     "zina_pay_activated",
                     "payment_systems_activated",
+                    "profitgate_activated",
                     "payment_with_confirmation",
                     "freedompay_confirmed",
                     "paysy_confirmed",
@@ -299,6 +309,8 @@ class OrganizationAdmin(admin.ModelAdmin):
                     "cryptocloud_confirmed",
                     "maaly_pay_confirmed",
                     "zina_pay_confirmed",
+                    "profitgate_confirmed",
+
                 )
 
             },
@@ -530,6 +542,7 @@ class OrganizationAdmin(admin.ModelAdmin):
                     organization_data["payment_systems_activated"] = (
                         obj.payment_systems_activated
                     )
+                    organization_data["profitgate_activated"] = obj.profitgate_activated
                     organization_data["payment_with_confirmation"] = (
                         obj.payment_with_confirmation
                     )
@@ -538,6 +551,7 @@ class OrganizationAdmin(admin.ModelAdmin):
                     organization_data["libersave_confirmed"] = obj.libersave_confirmed
                     organization_data["betapay_confirmed"] = obj.betapay_confirmed
                     organization_data["cryptocloud_confirmed"] = obj.betapay_confirmed
+                    organization_data["profitgate_confirmed"] = obj.profitgate_confirmed
                     organization_data["is_active"] = obj.is_active
                     organization_data["is_deleted"] = obj.is_deleted
                     organization_data["is_banned"] = obj.is_banned

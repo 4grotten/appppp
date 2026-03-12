@@ -217,6 +217,7 @@ class Organization(TimestampModel):
     zina_pay_activated = models.BooleanField(
         default=False, help_text=_("Activated in this organization")
     )
+    profitgate_activated = models.BooleanField(default=False, verbose_name="Profitgate активирован")
 
     payment_systems_activated = models.BooleanField(
         default=False, help_text=_("All payment systems are activated")
@@ -246,6 +247,7 @@ class Organization(TimestampModel):
     zina_pay_confirmed = models.BooleanField(
         default=False, help_text=_("Available in this organization")
     )
+    profitgate_confirmed = models.BooleanField(default=False, verbose_name="Profitgate подтвержден")
 
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
@@ -535,6 +537,26 @@ class MaalyPayOrganizationPaymentSystem(TimestampModel):
         related_name="maalypay_configs",
         help_text="Supported currencies. Empty = all currencies supported.",
     )
+
+
+class ProfitgateIntegration(models.Model):
+    organization = models.OneToOneField(
+        'organizations.Organization',
+        on_delete=models.CASCADE,
+        related_name='profitgate_integration',
+        verbose_name="Организация"
+    )
+    merchant_id = models.CharField(max_length=255, verbose_name="Merchant ID")
+    endpoint_id = models.CharField(max_length=255, verbose_name="Endpoint ID")
+    api_secret = models.CharField(max_length=255, verbose_name="API Secret (Key)")
+    is_active = models.BooleanField(default=True, verbose_name="Активна")
+
+    class Meta:
+        verbose_name = "Интеграция Profitgate"
+        verbose_name_plural = "Интеграции Profitgate"
+
+    def __str__(self):
+        return f"Profitgate - {self.organization.name}"
 
 
 class ZinaPayOrganizationPaymentSystem(TimestampModel):

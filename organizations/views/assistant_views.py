@@ -570,7 +570,7 @@ class ElevenLabsGetShopItemToolView(APIView):
             removed_at__isnull=True,
             organization__is_active=True,
             organization__is_deleted=False,
-        )
+        ).select_related('organization')
 
         if organization_id:
             qs = qs.filter(organization_id=organization_id)
@@ -578,14 +578,34 @@ class ElevenLabsGetShopItemToolView(APIView):
         if item_type in {"product", "rent", "ticket", "resume"}:
             qs = qs.filter(purchase_type=item_type)
 
-        qs = qs.filter(
-            models.Q(name__icontains=query) |
-            models.Q(description__icontains=query) |
-            models.Q(article__icontains=query)
-        ).select_related('organization')[:limit]
+        strict_matches = qs.annotate(
+            relevance=Case(
+                When(name__iexact=query, then=Value(120)),
+                When(article__iexact=query, then=Value(110)),
+                When(name__istartswith=query, then=Value(100)),
+                When(article__istartswith=query, then=Value(90)),
+                When(name__icontains=query, then=Value(80)),
+                When(article__icontains=query, then=Value(70)),
+                default=Value(0),
+                output_field=models.IntegerField(),
+            )
+        ).filter(relevance__gt=0).order_by('-relevance', 'name', '-updated_at')[:limit]
+
+        matched_items = list(strict_matches)
+
+        if not matched_items:
+            matched_items = list(
+                qs.annotate(
+                    relevance=Case(
+                        When(description__icontains=query, then=Value(20)),
+                        default=Value(0),
+                        output_field=models.IntegerField(),
+                    )
+                ).filter(relevance__gt=0).order_by('-relevance', 'name', '-updated_at')[:limit]
+            )
 
         results = []
-        for item in qs:
+        for item in matched_items:
             currency_code = ""
             if item.currency:
                 currency_code = item.currency.code

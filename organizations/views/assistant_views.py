@@ -608,7 +608,7 @@ class ElevenLabsGetShopItemToolView(APIView):
         return Response(
             {
                 "status": True,
-                "query": query,
+                "search_query": query,
                 "count": len(results),
                 "results": results,
             },

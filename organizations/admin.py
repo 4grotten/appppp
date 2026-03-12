@@ -969,7 +969,14 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(Assistant)
 class AssistantAdmin(admin.ModelAdmin):
-    list_display = ("id", "organization", "name", "voice_assistant_id", "is_enabled")
+    list_display = (
+        "id",
+        "organization",
+        "name",
+        "voice_assistant_id",
+        "ai_voice",
+        "is_enabled",
+    )
     list_filter = ("is_enabled", "organization")
     search_fields = ("name", "organization__title")
     
@@ -977,15 +984,16 @@ class AssistantAdmin(admin.ModelAdmin):
         ("Основная информация", {
             "fields": ("organization", "name", "gender", "position", "image", "is_enabled")
         }),
-        ("AI Настройки", {
-            "fields": ("ai_prompt", "first_message"),
+        ("PATCH /assistant/<id>/ai-prompt/", {
+            "fields": (
+                "ai_prompt",
+                "first_message",
+                "ai_voice",
+                "voice_name",
+                "voice_assistant_id",
+            ),
             "classes": ("wide",),
-            "description": "Системный prompt будет использоваться при всех запросах к LLM. first_message отправится клиенту при первом подключении."
-        }),
-        ("Голосовой Ассистент (ElevenLabs)", {
-            "fields": ("ai_voice", "voice_name", "voice_assistant_id"),
-            "classes": ("wide",),
-            "description": "ai_voice - ID голоса ElevenLabs, voice_assistant_id - ID агента для синхронизации с AI сервером"
+            "description": "Те же поля, которые обновляет PATCH endpoint assistant/<id>/ai-prompt/."
         }),
         ("Каталог товаров", {
             "fields": ("catalog_file", "catalog_excel_file"),
@@ -1002,11 +1010,32 @@ class AssistantAdmin(admin.ModelAdmin):
 
 @admin.register(UserAssistant)
 class UserAssistantAdmin(admin.ModelAdmin):
-    list_display = ("id", "assistant", "user", "active_until","is_voice_assistant")
+    list_display = (
+        "id",
+        "assistant",
+        "assistant_id_value",
+        "assistant_voice_assistant_id",
+        "user",
+        "active_until",
+        "is_voice_assistant",
+    )
+    list_filter = ("is_voice_assistant",)
     search_fields = (
         "assistant",
         "user",
     )
+
+    def assistant_id_value(self, obj):
+        return obj.assistant_id
+
+    assistant_id_value.short_description = "assistant_id"
+
+    def assistant_voice_assistant_id(self, obj):
+        if not obj.assistant:
+            return None
+        return obj.assistant.voice_assistant_id
+
+    assistant_voice_assistant_id.short_description = "assistant.voice_assistant_id"
 
 
 @admin.register(Plan)

@@ -90,7 +90,7 @@ class ProfileUpdateSerializer(serializers.Serializer):
     full_name = serializers.CharField(required=True)
     gender = serializers.ChoiceField(choices=GENDER_CHOICES, default=None)
     date_of_birth = serializers.DateField(required=False, allow_null=True)
-    username = serializers.CharField(required=False, allow_null=True)
+    username = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     device_type = serializers.CharField(
         required=False, default=None, allow_null=True, allow_blank=True
     )

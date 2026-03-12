@@ -480,10 +480,11 @@ class GetElevenLabsSignedUrlView(APIView):
                 return Response({"error": "Linked Assistant model not found"}, status=400)
 
             logger.info(
-                "[CALL_AI] Resolved mapping: chat_id=%s user_assistant_id=%s assistant_id=%s voice_assistant_id='%s'",
+                "[CALL_AI] Resolved mapping: chat_id=%s user_assistant_id=%s assistant_id=%s assistant_name='%s' voice_assistant_id='%s'",
                 chat_id,
                 user_assistant.id,
                 assistant_obj.id,
+                assistant_obj.name,
                 assistant_obj.voice_assistant_id,
             )
 

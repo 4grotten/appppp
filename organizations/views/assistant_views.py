@@ -557,8 +557,8 @@ class ElevenLabsGetShopItemToolView(APIView):
         
 
         query = (request.data.get("search_query") or request.data.get("keyword") or request.data.get("query") or "").strip()
-        organiztion_id = request.data.get("organization_id")
-        item_type = (request.data.get("item_type") or "").strip.lower()
+        organization_id = request.data.get("organization_id")
+        item_type = (request.data.get("item_type") or "").strip().lower()
         limit = min(int(request.data.get("limit", 5) or 5), 10)
 
         if not query:
@@ -572,8 +572,8 @@ class ElevenLabsGetShopItemToolView(APIView):
             organization__is_deleted=False,
         )
 
-        if organiztion_id:
-            qs = qs.filter(organiztion_id=organiztion_id)
+        if organization_id:
+            qs = qs.filter(organization_id=organization_id)
 
         if item_type in {"product", "rent", "ticket", "resume"}:
             qs = qs.filter(item_type=item_type)
@@ -582,7 +582,7 @@ class ElevenLabsGetShopItemToolView(APIView):
             models.Q(name__icontains=query) |
             models.Q(description__icontains=query) |
             models.Q(article__icontains=query)
-        ).select_related('organization', 'query')[:limit]
+        ).select_related('organization')[:limit]
 
         results = []
         for item in qs:

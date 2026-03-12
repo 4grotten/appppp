@@ -144,7 +144,6 @@ class CommentService:
                     comment_id=comment.id,
                     comment_text=text)
             )
-
         return comment
 
     @classmethod
@@ -160,12 +159,12 @@ class CommentService:
         return comment
 
     @classmethod
-    def create_chat_comment(cls, text: str, chat: Chat, user: User, parent: Comment = None, user_audio_file=None):
+    def create_chat_comment(cls, text: str, chat: Chat, user: User, parent: Comment = None, user_audio_file=None, skip_assistant_reply=False):
         if not text and user_audio_file:
             text = "[Голосовое сообщение]"
-            
         comment = cls.model.objects.create(chat=chat, user=user, parent=parent, text=text)
-
+        # Пробросить skip_assistant_reply в объект комментария через атрибут (если нужно)
+        comment.skip_assistant_reply = skip_assistant_reply
         if user_audio_file:
             comment.user_audio.save(user_audio_file.name, user_audio_file, save=True)
         return comment

@@ -48,6 +48,18 @@ def convert_decimals(obj):
 
 class CommentConsumer(AsyncWebsocketConsumer):
 
+    @staticmethod
+    def parse_bool(value, default=False):
+        if value is None:
+            return default
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float)):
+            return bool(value)
+        if isinstance(value, str):
+            return value.strip().lower() in {"1", "true", "yes", "on"}
+        return default
+
     async def connect(self):
         try:
             self.chat_id = self.scope["url_route"]["kwargs"]["chat_id"]
@@ -98,15 +110,21 @@ class CommentConsumer(AsyncWebsocketConsumer):
             # msg_type = data.get("type")
             user_audio_base64 = data.get("user_audio", None)
             assistant_id = data.get("assistant_id", None)
+            skip_assistant_reply = self.parse_bool(data.get("skip_assistant_reply"), default=False)
             user = self.scope["user"]
             chat = self.chat
             logger.info(
-                "[WS_AI_FLOW] Incoming websocket message: chat_id=%s user_id=%s assistant_id=%s has_audio=%s",
+                "[WS_AI_FLOW] Incoming websocket message: chat_id=%s user_id=%s assistant_id=%s has_audio=%s skip_assistant_reply=%s",
                 chat.id,
                 getattr(user, "id", None),
                 assistant_id,
                 bool(user_audio_base64),
+                skip_assistant_reply,
             )
+
+            if skip_assistant_reply and assistant_id is None:
+                await self.handle_user_response(data, user)
+                return
             
             # if msg_type == "save_ai_message" or data.get("assistant_id"):
             #     await self.handle_ai_response(data, user)
@@ -499,13 +517,12 @@ class CommentConsumer(AsyncWebsocketConsumer):
             return False
     
     @database_sync_to_async
-    def create_user_comment_with_audio(self, text, chat, user, audio_base64=None, parent=None):
+    def create_user_comment_with_audio(self, text, chat, user, audio_base64=None, parent=None, skip_assistant_reply=False):
         user_audio_file = None
         if audio_base64:
             try:
                 if ";base64," in audio_base64:
                     header, audio_base64 = audio_base64.split(";base64,")
-
                 decoded_file = base64.b64decode(audio_base64)
                 file_name = f"user_voice_{uuid.uuid4()}.mp3"
                 user_audio_file = ContentFile(decoded_file, name=file_name)
@@ -517,7 +534,8 @@ class CommentConsumer(AsyncWebsocketConsumer):
             chat=chat, 
             user=user, 
             parent=parent,
-            user_audio_file=user_audio_file
+            user_audio_file=user_audio_file,
+            skip_assistant_reply=skip_assistant_reply
         )
 
 
@@ -527,10 +545,18 @@ class CommentConsumer(AsyncWebsocketConsumer):
             text = data.get("message", "")
             parent_id = data.get("parent", None)
             audio_base64 = data.get("user_audio") 
+            skip_assistant_reply = self.parse_bool(data.get("skip_assistant_reply"), default=False)
             chat = self.chat
             parent = await self.get_comment(parent_id) if parent_id else None
+            logger.info(
+                "[WS_AI_FLOW] Frontend skip_assistant_reply received: raw=%s parsed=%s chat_id=%s user_id=%s",
+                data.get("skip_assistant_reply"),
+                skip_assistant_reply,
+                getattr(chat, "id", None),
+                getattr(user, "id", None),
+            )
             
-            comment = await self.create_user_comment_with_audio(text, chat, user, audio_base64, parent)
+            comment = await self.create_user_comment_with_audio(text, chat, user, audio_base64, parent, skip_assistant_reply=skip_assistant_reply)
             
             serialized_data = await self.serialize_data(comment=comment, user=user)
             await self.channel_layer.group_send(

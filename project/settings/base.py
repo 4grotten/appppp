@@ -663,6 +663,7 @@ OTP_MESSAGE_TEMPLATE = config(
 # ElevenLabs Configuration (Voice AI for OTP Bot)
 ELEVENLABS_API_KEY = config("ELEVENLABS_API_KEY", default="")
 ELEVENLABS_API_KEY2 = config("ELEVENLABS_API_KEY2", default="")
+ELEVENLABS_TOOL_API_KEY = config("ELEVENLABS_TOOL_API_KEY", default="")
 ELEVENLABS_VOICE_ID = config("ELEVENLABS_VOICE_ID", default="FGY2WhTYpPnrIDTdsKH5")  # Laura
 ELEVENLABS_MODEL_TTS = config("ELEVENLABS_MODEL_TTS", default="eleven_turbo_v2_5")
 ELEVENLABS_MODEL_STT = config("ELEVENLABS_MODEL_STT", default="scribe_v1")
@@ -791,3 +792,6 @@ JAZZMIN_UI_TWEAKS = {
         "success": "btn-success"
     }
 }
+
+
+

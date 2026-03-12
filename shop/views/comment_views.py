@@ -54,35 +54,38 @@ class CommentItemListCreateView(ListCreateAPIView):
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        validated_data = dict(serializer.validated_data)
+        skip_assistant_reply = validated_data.pop('skip_assistant_reply', False)
         item = ShopItemService.get(id=self.kwargs['pk'])
-        comment = CommentService.create_comment(**serializer.validated_data, item=item)
+        comment = CommentService.create_comment(**validated_data, item=item)
         item_info = ItemInfoSerializer(item).data
-        if hasattr(item, 'organization') and item.organization:
-            organization = OrganizationService.get(id=item.organization.id)
+        if not skip_assistant_reply:
+            if hasattr(item, 'organization') and item.organization:
+                organization = OrganizationService.get(id=item.organization.id)
 
-            if hasattr(organization, 'assistant'):
-                organization_info = CommentService.get_training_data(assistant=organization.assistant)
-                user_assistants = UserAssistant.objects.filter(
-                    assistant__organization=organization,
-                    is_active=True
-                )
-
-                if user_assistants.exists():
-                    longest_active_user_assistant = user_assistants.order_by('-active_until').first()
-                    user_assistants.exclude(id=longest_active_user_assistant.id).update(is_active=False)
-
-                    is_assistant_active = (
-                            longest_active_user_assistant.active_until and
-                            longest_active_user_assistant.active_until > timezone.now()
+                if hasattr(organization, 'assistant'):
+                    organization_info = CommentService.get_training_data(assistant=organization.assistant)
+                    user_assistants = UserAssistant.objects.filter(
+                        assistant__organization=organization,
+                        is_active=True
                     )
 
-                    if is_assistant_active:
-                        process_comment_with_assistant.delay(
-                            item_info=item_info,
-                            organization_info=organization_info,
-                            comment_id=comment.id,
-                            assistant_id=organization.assistant.id
+                    if user_assistants.exists():
+                        longest_active_user_assistant = user_assistants.order_by('-active_until').first()
+                        user_assistants.exclude(id=longest_active_user_assistant.id).update(is_active=False)
+
+                        is_assistant_active = (
+                                longest_active_user_assistant.active_until and
+                                longest_active_user_assistant.active_until > timezone.now()
                         )
+
+                        if is_assistant_active:
+                            process_comment_with_assistant.delay(
+                                item_info=item_info,
+                                organization_info=organization_info,
+                                comment_id=comment.id,
+                                assistant_id=organization.assistant.id
+                            )
         data = self.serializer_class(comment, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 
@@ -168,25 +171,35 @@ class CommentChatListCreateView(ListCreateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        validated_data = serializer.validated_data
+        validated_data = dict(serializer.validated_data)
         user_audio = validated_data.pop('user_audio', None) 
+        skip_assistant_reply = validated_data.pop('skip_assistant_reply', False)
+
+        if skip_assistant_reply:
+            comment = CommentService.create_chat_comment(
+                **validated_data,
+                chat=chat,
+                user_audio_file=user_audio,
+            )
+            data = self.serializer_class(comment, context={'request': request}).data
+            return Response(data, status=status.HTTP_201_CREATED)
 
         if chat.assistant.is_enabled:
             if chat.chat_by_org_user:
-                comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat)
+                comment = CommentService.create_chat_comment(**validated_data, chat=chat, user_audio_file=user_audio)
             else:
                 if check_ai_feature_access(
                     organization=chat.assistant.organization,
                     feature="web_chat_ai",
                 ):
                     comment = CommentService.create_chat_comment_with_assistant_response(
-                        **serializer.validated_data, chat=chat, request=request,user_audio_file=user_audio
+                        **validated_data, chat=chat, request=request, user_audio_file=user_audio
                     )
                 else:
-                    comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat,user_audio_file=user_audio)
+                    comment = CommentService.create_chat_comment(**validated_data, chat=chat, user_audio_file=user_audio)
         else:
             comment = CommentService.create_chat_comment_with_assistant_default_response(
-                **serializer.validated_data, chat=chat
+                **validated_data, chat=chat
             )
         data = self.serializer_class(comment, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)

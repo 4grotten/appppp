@@ -193,8 +193,28 @@ class OrganizationPaymentSystemUsersInLine(admin.TabularInline):
 class AssistantInline(admin.StackedInline):
     model = Assistant
     extra = 0
-    fields = ("organization", "name", "get_html_photo", "gender",  "position", "is_enabled", "ai_prompt", "first_message", "ai_voice", "voice_name", "voice_assistant_id")
     readonly_fields = ('get_html_photo',)
+    
+    fieldsets = (
+        ("Основная информация", {
+            "fields": ("organization", "name", "get_html_photo", "image", "gender", "position", "is_enabled")
+        }),
+        ("AI Настройки", {
+            "fields": ("ai_prompt", "first_message"),
+            "classes": ("wide",),
+            "description": "Системный prompt и первое сообщение ассистента"
+        }),
+        ("Голосовой Ассистент", {
+            "fields": ("ai_voice", "voice_name", "voice_assistant_id"),
+            "classes": ("wide",),
+            "description": "Настройки голоса и ID агента для ElevenLabs"
+        }),
+        ("Каталог товаров", {
+            "fields": ("catalog_file", "catalog_excel_file"),
+            "classes": ("collapse",),
+            "description": "JSON и Excel файлы с каталогом (опционально)"
+        }),
+    )
 
     def get_html_photo(self, obj):
         if obj.image and obj.image.small:
@@ -949,9 +969,35 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(Assistant)
 class AssistantAdmin(admin.ModelAdmin):
-    list_display = ("id", "organization", "name","voice_assistant_id")
-
-    search_fields = ("name",)
+    list_display = ("id", "organization", "name", "voice_assistant_id", "is_enabled")
+    list_filter = ("is_enabled", "organization")
+    search_fields = ("name", "organization__title")
+    
+    fieldsets = (
+        ("Основная информация", {
+            "fields": ("organization", "name", "gender", "position", "image", "is_enabled")
+        }),
+        ("AI Настройки", {
+            "fields": ("ai_prompt", "first_message"),
+            "classes": ("wide",),
+            "description": "Системный prompt будет использоваться при всех запросах к LLM. first_message отправится клиенту при первом подключении."
+        }),
+        ("Голосовой Ассистент (ElevenLabs)", {
+            "fields": ("ai_voice", "voice_name", "voice_assistant_id"),
+            "classes": ("wide",),
+            "description": "ai_voice - ID голоса ElevenLabs, voice_assistant_id - ID агента для синхронизации с AI сервером"
+        }),
+        ("Каталог товаров", {
+            "fields": ("catalog_file", "catalog_excel_file"),
+            "classes": ("collapse",),
+            "description": "JSON генерируется автоматически из ShopItem. Excel файл используется как fallback если JSON отсутствует."
+        }),
+    )
+    
+    def save_model(self, request, obj, form, change):
+        """После сохранения ассистента, система автоматически синхронизирует его с AI server"""
+        super().save_model(request, obj, form, change)
+        # Сигнал в shop/signals.py автоматически триггерится при save
 
 
 @admin.register(UserAssistant)

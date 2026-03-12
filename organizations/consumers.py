@@ -523,7 +523,6 @@ class CommentConsumer(AsyncWebsocketConsumer):
             try:
                 if ";base64," in audio_base64:
                     header, audio_base64 = audio_base64.split(";base64,")
-
                 decoded_file = base64.b64decode(audio_base64)
                 file_name = f"user_voice_{uuid.uuid4()}.mp3"
                 user_audio_file = ContentFile(decoded_file, name=file_name)
@@ -545,10 +544,11 @@ class CommentConsumer(AsyncWebsocketConsumer):
             text = data.get("message", "")
             parent_id = data.get("parent", None)
             audio_base64 = data.get("user_audio") 
+            skip_assistant_reply = self.parse_bool(data.get("skip_assistant_reply"), default=False)
             chat = self.chat
             parent = await self.get_comment(parent_id) if parent_id else None
             
-            comment = await self.create_user_comment_with_audio(text, chat, user, audio_base64, parent)
+            comment = await self.create_user_comment_with_audio(text, chat, user, audio_base64, parent, skip_assistant_reply=skip_assistant_reply)
             
             serialized_data = await self.serialize_data(comment=comment, user=user)
             await self.channel_layer.group_send(

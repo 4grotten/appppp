@@ -27,7 +27,7 @@ services:
       - waha
     env_file: ./env/production.env
     volumes:
-      - ./static:/app/static
+      - ./static:/app/internal-static
       - ./media:/app/media
     command: /gunicorn.sh
     restart: always

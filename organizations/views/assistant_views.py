@@ -568,7 +568,7 @@ class ElevenLabsGetShopItemToolView(APIView):
             is_published=True,
             is_hidden=False,
             removed_at__isnull=True,
-            organization__isactive=True,
+            organization__is_active=True,
             organization__is_deleted=False,
         )
 
@@ -576,7 +576,7 @@ class ElevenLabsGetShopItemToolView(APIView):
             qs = qs.filter(organization_id=organization_id)
 
         if item_type in {"product", "rent", "ticket", "resume"}:
-            qs = qs.filter(item_type=item_type)
+            qs = qs.filter(purchase_type=item_type)
 
         qs = qs.filter(
             models.Q(name__icontains=query) |

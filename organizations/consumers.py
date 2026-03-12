@@ -517,7 +517,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
             return False
     
     @database_sync_to_async
-    def create_user_comment_with_audio(self, text, chat, user, audio_base64=None, parent=None):
+    def create_user_comment_with_audio(self, text, chat, user, audio_base64=None, parent=None, skip_assistant_reply=False):
         user_audio_file = None
         if audio_base64:
             try:
@@ -534,7 +534,8 @@ class CommentConsumer(AsyncWebsocketConsumer):
             chat=chat, 
             user=user, 
             parent=parent,
-            user_audio_file=user_audio_file
+            user_audio_file=user_audio_file,
+            skip_assistant_reply=skip_assistant_reply
         )
 
 
@@ -547,6 +548,13 @@ class CommentConsumer(AsyncWebsocketConsumer):
             skip_assistant_reply = self.parse_bool(data.get("skip_assistant_reply"), default=False)
             chat = self.chat
             parent = await self.get_comment(parent_id) if parent_id else None
+            logger.info(
+                "[WS_AI_FLOW] Frontend skip_assistant_reply received: raw=%s parsed=%s chat_id=%s user_id=%s",
+                data.get("skip_assistant_reply"),
+                skip_assistant_reply,
+                getattr(chat, "id", None),
+                getattr(user, "id", None),
+            )
             
             comment = await self.create_user_comment_with_audio(text, chat, user, audio_base64, parent, skip_assistant_reply=skip_assistant_reply)
             

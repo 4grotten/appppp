@@ -24,7 +24,7 @@ class ProfitgateInitPaymentAPIView(APIView):
             return Response({"error": "Валюта не поддерживается"}, status=400)
 
         service = ProfitgateService(integration)
-        finish_url = request.build_absolute_view_uri('/payment/success/')
+        finish_url = request.build_absolute_uri('/payment/success/')
         notification_url = request.build_absolute_uri('/api/v1/transactions/webhooks/profitgate/')
         
         try:

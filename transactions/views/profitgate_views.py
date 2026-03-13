@@ -14,7 +14,7 @@ class ProfitgateInitPaymentAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, transaction_id):
-        transaction = get_object_or_404(Transaction, id=transaction_id, user=request.user)
+        transaction = get_object_or_404(Transaction, id=transaction_id, client=request.user)
         integration = get_object_or_404(
             ProfitgateIntegration, 
             organization=transaction.organization, 

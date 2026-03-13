@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class CatalogExportService:
     @classmethod
     def export_latest_catalog_to_excel(cls, organization):
+        organization.refresh_from_db(fields=["catalog_file", "catalog_excel_file"])
         assistant = getattr(organization, "assistant", None)
         catalog_file = getattr(organization, "catalog_file", None)
         catalog_source = "organization"

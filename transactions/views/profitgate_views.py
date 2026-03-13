@@ -20,7 +20,7 @@ class ProfitgateInitPaymentAPIView(APIView):
             organization=transaction.organization, 
             is_active=True
         )
-        if not integration.currencies.filter(id=transaction.currency_id).exists():
+        if not integration.currencies.filter(code=transaction.currency_id).exists():
             return Response({"error": "Валюта не поддерживается"}, status=400)
 
         service = ProfitgateService(integration)

@@ -56,6 +56,8 @@ class OrganizationLinkAPIView(APIView):
             )
 
         if not is_ok:
+            # Return 503 Service Unavailable instead of 502 for better client UX
+            # 502 = our service is down, 503 = upstream service is down
             return Response(
                 {
                     "organization_id": organization_id,
@@ -63,11 +65,11 @@ class OrganizationLinkAPIView(APIView):
                     "organization_url": links["organization_url"],
                     "applications_url": links["applications_url"],
                     "organization_page_url": organization_page_url,
-                    "error": "Failed to fetch organization from partner API",
+                    "error": "Apofiz API is temporarily unavailable",
+                    "details": organization_payload,
                     "partner_status_code": organization_status,
-                    "partner_response": organization_payload,
                 },
-                status=status.HTTP_502_BAD_GATEWAY,
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
         applications_payload = None

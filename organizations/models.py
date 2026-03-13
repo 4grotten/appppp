@@ -556,7 +556,7 @@ class ProfitgateIntegration(models.Model):
         verbose_name_plural = "Интеграции Profitgate"
 
     def __str__(self):
-        return f"Profitgate - {self.organization.name}"
+        return f"Profitgate - {self.organization.title}"
 
 
 class ZinaPayOrganizationPaymentSystem(TimestampModel):

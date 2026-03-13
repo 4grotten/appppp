@@ -14,7 +14,6 @@ from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from mapwidgets.widgets import GooglePointFieldWidget
 from django.utils.safestring import mark_safe 
 
 from common.utils import DecimalDecoder, DecimalEncoder
@@ -225,7 +224,6 @@ class AssistantInline(admin.StackedInline):
 class OrganizationAdmin(admin.ModelAdmin):
     change_form_template = "admin/organization_change_form.html"
     list_select_related = ("owner", "country", "city", "currency")
-    formfield_overrides = {models.PointField: {"widget": GooglePointFieldWidget}}
     list_display_links = ("id", "title")
     list_display = (
         "id",
@@ -284,7 +282,6 @@ class OrganizationAdmin(admin.ModelAdmin):
                     "description",
                     "description_lang",
                     "address",
-                    "location",
                     "currency",
                     "country",
                     "city",

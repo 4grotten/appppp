@@ -171,9 +171,13 @@ class CommentConsumer(AsyncWebsocketConsumer):
                                 logger.error("Comment creation failed, skipping AI response.")
                         else:
                             logger.info(
-                                "[WS_AI_FLOW] Incoming AI callback branch: chat_id=%s assistant_id=%s data_keys=%s",
+                                "[WS_AI_FLOW] Incoming AI callback branch: chat_id=%s payload_assistant_id=%s resolved_assistant_id=%s assistant_name='%s' organization_id=%s organization_title='%s' data_keys=%s",
                                 chat.id,
                                 assistant_id,
+                                assistant.id,
+                                assistant.name,
+                                organization.id,
+                                organization.title,
                                 list(data.keys()),
                             )
                             await self.handle_ai_response(data, user)
@@ -589,12 +593,6 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 len(text or ""),
                 bool(audio_base64),
             )
-            logger.info(
-                "[WS_AI_FLOW] Model trace (callback): chat_id=%s assistant_id=%s callback_model=%s",
-                getattr(self.chat, "id", None),
-                assistant_id,
-                callback_model,
-            )
             # assistant = await self.get_assistant(assistant_id)
             # parent = await self.get_comment(parent_id)
             # chat = await self.get_chat_with_parent(parent)
@@ -606,6 +604,18 @@ class CommentConsumer(AsyncWebsocketConsumer):
             else:
                 assistant = await self.get_assistant_by_chat(chat=self.chat)
 
+            organization = await self.get_assistant_organization(assistant)
+
+            logger.info(
+                "[WS_AI_FLOW] Model trace (callback): chat_id=%s assistant_id=%s assistant_name='%s' organization_id=%s organization_title='%s' callback_model=%s",
+                getattr(self.chat, "id", None),
+                assistant.id,
+                assistant.name,
+                organization.id,
+                organization.title,
+                callback_model,
+            )
+
             parent = None
             if parent_id:
                 try:
@@ -615,9 +625,12 @@ class CommentConsumer(AsyncWebsocketConsumer):
                     parent = None
             else:
                 logger.warning(
-                    "[WS_AI_FLOW] AI callback without parent_id: chat_id=%s assistant_id=%s",
+                    "[WS_AI_FLOW] AI callback without parent_id: chat_id=%s assistant_id=%s assistant_name='%s' organization_id=%s organization_title='%s'",
                     getattr(self.chat, "id", None),
-                    assistant_id,
+                    assistant.id,
+                    assistant.name,
+                    organization.id,
+                    organization.title,
                 )
 
             chat = self.chat
@@ -626,11 +639,14 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 text, chat, assistant, parent, audio_base64
             )
             logger.info(
-                "[WS_AI_FLOW] AI comment persisted: chat_id=%s comment_id=%s parent_id=%s assistant_id=%s text_len=%s",
+                "[WS_AI_FLOW] AI comment persisted: chat_id=%s comment_id=%s parent_id=%s assistant_id=%s assistant_name='%s' organization_id=%s organization_title='%s' text_len=%s",
                 chat.id,
                 comment.id,
                 getattr(parent, "id", None),
                 assistant.id,
+                assistant.name,
+                organization.id,
+                organization.title,
                 len(text or ""),
             )
             serialized_data = await self.serialize_assistant_data(

@@ -458,6 +458,11 @@ class GetElevenLabsSignedUrlView(APIView):
 
     def get(self, request, chat_id):
         try:
+            logger.info(
+                "[CALL_AI] Incoming request: user_id=%s chat_id=%s",
+                getattr(request.user, "id", None),
+                chat_id,
+            )
             user_assistant = UserAssistant.objects.filter(id=chat_id).first()
 
             if not user_assistant:
@@ -474,7 +479,16 @@ class GetElevenLabsSignedUrlView(APIView):
                 logger.error(f"UserAssistant {chat_id} has no linked Assistant record")
                 return Response({"error": "Linked Assistant model not found"}, status=400)
 
-            logger.info(f"Checking Assistant ID: {assistant_obj.id}, Voice ID: '{assistant_obj.voice_assistant_id}'")
+            logger.info(
+                "[CALL_AI] Resolved mapping: chat_id=%s user_assistant_id=%s assistant_id=%s assistant_name='%s' organization_id=%s organization_title='%s' voice_assistant_id='%s'",
+                chat_id,
+                user_assistant.id,
+                assistant_obj.id,
+                assistant_obj.name,
+                assistant_obj.organization_id,
+                assistant_obj.organization.title if assistant_obj.organization else None,
+                assistant_obj.voice_assistant_id,
+            )
 
             agent_id = assistant_obj.voice_assistant_id
             if not agent_id:

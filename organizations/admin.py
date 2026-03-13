@@ -194,8 +194,28 @@ class OrganizationPaymentSystemUsersInLine(admin.TabularInline):
 class AssistantInline(admin.StackedInline):
     model = Assistant
     extra = 0
-    fields = ("organization", "name", "get_html_photo", "gender",  "position", "is_enabled", "ai_prompt", "first_message", "ai_voice", "voice_name", "voice_assistant_id")
     readonly_fields = ('get_html_photo',)
+    
+    fieldsets = (
+        ("Основная информация", {
+            "fields": ("organization", "name", "get_html_photo", "image", "gender", "position", "is_enabled")
+        }),
+        ("AI Настройки", {
+            "fields": ("ai_prompt", "first_message"),
+            "classes": ("wide",),
+            "description": "Системный prompt и первое сообщение ассистента"
+        }),
+        ("Голосовой Ассистент", {
+            "fields": ("ai_voice", "voice_name", "voice_assistant_id"),
+            "classes": ("wide",),
+            "description": "Настройки голоса и ID агента для ElevenLabs"
+        }),
+        ("Каталог товаров", {
+            "fields": ("catalog_file", "catalog_excel_file"),
+            "classes": ("collapse",),
+            "description": "JSON и Excel файлы с каталогом (опционально)"
+        }),
+    )
 
     def get_html_photo(self, obj):
         if obj.image and obj.image.small:
@@ -963,24 +983,97 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(Assistant)
 class AssistantAdmin(admin.ModelAdmin):
-    list_display = ("id", "organization", "name","voice_assistant_id")
-
-    search_fields = ("name",)
+    list_display = (
+        "id",
+        "organization",
+        "name",
+        "voice_assistant_id",
+        "ai_voice",
+        "is_enabled",
+    )
+    list_filter = ("is_enabled", "organization")
+    search_fields = ("name", "organization__title")
+    
+    fieldsets = (
+        ("Основная информация", {
+            "fields": ("organization", "name", "gender", "position", "image", "is_enabled")
+        }),
+        ("PATCH /assistant/<id>/ai-prompt/", {
+            "fields": (
+                "ai_prompt",
+                "first_message",
+                "ai_voice",
+                "voice_name",
+                "voice_assistant_id",
+            ),
+            "classes": ("wide",),
+            "description": "Те же поля, которые обновляет PATCH endpoint assistant/<id>/ai-prompt/."
+        }),
+        ("Каталог товаров", {
+            "fields": ("catalog_file", "catalog_excel_file"),
+            "classes": ("collapse",),
+            "description": "JSON генерируется автоматически из ShopItem. Excel файл используется как fallback если JSON отсутствует."
+        }),
+    )
+    
+    def save_model(self, request, obj, form, change):
+        """После сохранения ассистента, система автоматически синхронизирует его с AI server"""
+        super().save_model(request, obj, form, change)
+        # Сигнал в shop/signals.py автоматически триггерится при save
 
 
 @admin.register(UserAssistant)
 class UserAssistantAdmin(admin.ModelAdmin):
-    list_display = ("id", "assistant", "user", "active_until","is_voice_assistant")
+    list_display = (
+        "id",
+        "assistant",
+        "assistant_id_value",
+        "assistant_voice_assistant_id",
+        "user",
+        "active_until",
+        "is_voice_assistant",
+    )
+    list_filter = ("is_voice_assistant",)
     search_fields = (
         "assistant",
         "user",
     )
 
+    def assistant_id_value(self, obj):
+        return obj.assistant_id
+
+    assistant_id_value.short_description = "assistant_id"
+
+    def assistant_voice_assistant_id(self, obj):
+        if not obj.assistant:
+            return None
+        return obj.assistant.voice_assistant_id
+
+    assistant_voice_assistant_id.short_description = "assistant.voice_assistant_id"
+
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
-    list_display = ("id", "name")
-    search_fields = ("name",)
+    list_display = (
+        "id",
+        "name",
+        "price",
+        "currency",
+        "is_best_choice",
+        "is_active_all",
+        "position_number",
+    )
+    search_fields = (
+        "name",
+        "additional_name",
+        "name_ru",
+        "name_en",
+        "name_de",
+        "name_tr",
+        "name_zh",
+    )
+    list_filter = ("is_best_choice", "is_active_all", "currency")
+    list_editable = ("price", "is_best_choice", "is_active_all", "position_number")
 
 
 @admin.register(Answer)

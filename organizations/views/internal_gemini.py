@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 
 from organizations.models import Organization
+from organizations.services.ai_access_service import check_gemini_access
 
 
 logger = logging.getLogger(__name__)
@@ -36,9 +37,10 @@ def gemini_access_check_view(request):
             status=404,
         )
 
+    allowed = check_gemini_access(organization)
     logger.info(
         "[GEMINI_ACCESS][INTERNAL] org_id=%s allowed=%s",
         organization.id,
-        bool(organization.gemini_enabled),
+        allowed,
     )
-    return JsonResponse({"organization_id": organization.id, "allowed": bool(organization.gemini_enabled)})
+    return JsonResponse({"organization_id": organization.id, "allowed": allowed})

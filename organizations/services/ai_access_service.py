@@ -51,3 +51,24 @@ def check_ai_feature_access(organization, feature: str = "general") -> bool:
         organization.ai_trial_ends_at,
     )
     return trial_active
+
+
+def check_gemini_access(organization) -> bool:
+    """Return Gemini access based on explicit flag or active AI access."""
+    if organization.gemini_enabled:
+        logger.info(
+            "[GEMINI_ACCESS] Flag access granted: org=%s",
+            organization.id,
+        )
+        return True
+
+    subscription_or_trial_access = check_ai_feature_access(
+        organization=organization,
+        feature="general",
+    )
+    logger.info(
+        "[GEMINI_ACCESS] Subscription/trial access for org=%s: %s",
+        organization.id,
+        subscription_or_trial_access,
+    )
+    return subscription_or_trial_access

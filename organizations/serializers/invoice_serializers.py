@@ -140,9 +140,10 @@ class RegionalTariffSerializer(serializers.ModelSerializer):
 
 
 class ActiveTariffSerializer(serializers.Serializer):
-    tariff = RegionalTariffSerializer()
+    tariff = RegionalTariffSerializer(allow_null=True, required=False)
     is_active = serializers.BooleanField()
-    active_until = serializers.DateTimeField()
+    active_until = serializers.DateTimeField(allow_null=True, required=False)
+    gemini_allowed = serializers.BooleanField(required=False)
 
 
 class OrganizationInvoiceInfoSerializer(serializers.ModelSerializer):

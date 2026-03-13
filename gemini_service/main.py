@@ -53,6 +53,30 @@ async def _is_gemini_enabled_for_org(organization_id: Optional[int]) -> Tuple[bo
         return False, "internal_check_unavailable"
 
 
+def _extract_organization_id(request: Request, organization_id: Optional[int]) -> Optional[int]:
+    """Extract organization id from form/query/header aliases."""
+    if organization_id is not None:
+        return organization_id
+
+    candidates = [
+        request.query_params.get("organization_id"),
+        request.query_params.get("organization"),
+        request.query_params.get("org_id"),
+        request.headers.get("X-Organization-Id"),
+        request.headers.get("x-organization-id"),
+    ]
+
+    for raw in candidates:
+        if raw is None or raw == "":
+            continue
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            continue
+
+    return None
+
+
 @app.post("/api/v2/gemini/generate/image")
 async def generate_image(
     request: Request,
@@ -75,13 +99,7 @@ async def generate_image(
     aspect_ratio: str = Form(...),
     organization_id: Optional[int] = Form(default=None),
 ):
-    if organization_id is None:
-        organization_id_raw = request.query_params.get("organization_id")
-        if organization_id_raw:
-            try:
-                organization_id = int(organization_id_raw)
-            except ValueError:
-                organization_id = None
+    organization_id = _extract_organization_id(request, organization_id)
 
     is_allowed, deny_reason = await _is_gemini_enabled_for_org(organization_id)
     if not is_allowed:
@@ -147,13 +165,7 @@ async def generate_prompt(
     images: Optional[List[UploadFile]] = File(None),
     organization_id: Optional[int] = Form(default=None),
 ):
-    if organization_id is None:
-        organization_id_raw = request.query_params.get("organization_id")
-        if organization_id_raw:
-            try:
-                organization_id = int(organization_id_raw)
-            except ValueError:
-                organization_id = None
+    organization_id = _extract_organization_id(request, organization_id)
 
     is_allowed, deny_reason = await _is_gemini_enabled_for_org(organization_id)
     if not is_allowed:

@@ -1289,7 +1289,7 @@ class OrgVerificationsSerializer(serializers.ModelSerializer):
 
 class OrgPaymentSystemConfirmationSerializer(serializers.Serializer):
     payment_system_id = serializers.IntegerField(required=False)
-    username = serializers.CharField(required=False)
+    username = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     phone_number = serializers.CharField(required=False)
     email = serializers.EmailField(required=False)
     # MaalyPay fields

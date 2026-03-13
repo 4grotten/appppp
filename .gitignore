@@ -10,6 +10,7 @@ local_settings.py
 db.sqlite3
 /static
 .env
+env/
 /d-static
 .DS_Store
 frontend/dist

@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class CatalogExportService:
     @classmethod
     def export_latest_catalog_to_excel(cls, organization):
+        organization.refresh_from_db(fields=["catalog_file", "catalog_excel_file"])
         assistant = getattr(organization, "assistant", None)
         catalog_file = getattr(organization, "catalog_file", None)
         catalog_source = "organization"
@@ -33,7 +34,14 @@ class CatalogExportService:
         try:
             with catalog_file.open("rb") as catalog_stream:
                 catalog_data = json.load(catalog_stream)
-        except Exception:
+        except Exception as exc:
+            logger.exception(
+                "[EXCEL_EXPORT] Failed to read catalog JSON for org_id=%s source=%s file=%s error=%s",
+                organization.id,
+                catalog_source,
+                getattr(catalog_file, "name", None),
+                str(exc),
+            )
             return None
 
         if isinstance(catalog_data, dict):

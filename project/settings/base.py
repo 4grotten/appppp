@@ -80,7 +80,6 @@ INSTALLED_APPS = [
     "messenger_bots.apps.MessengerBotsConfig",
     "otp_bot.apps.OtpBotConfig",
     "easycard_integration.apps.EasycardIntegrationConfig",
-    "apofiz_app_integration.apps.ApofizAppIntegrationConfig",
     "saved_contacts.apps.SavedContactsConfig",
 ]
 

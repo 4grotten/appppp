@@ -1,7 +1,5 @@
 from django.urls import path
-
-from organizations.views.profitgate_views import ProfitgateWebhookAPIView
-from transactions.views.profitgate_views import ProfitgateInitPaymentAPIView
+from transactions.views.profitgate_views import ProfitgateInitPaymentAPIView, ProfitgateWebhookAPIView
 from transactions.views.stat_views import (
     OrganizationAcceptedWithdrawalTotalsView,
     OrganizationTotalsView,

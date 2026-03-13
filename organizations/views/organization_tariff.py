@@ -147,6 +147,7 @@ class OrganizationActiveTariffAPIView(generics.GenericAPIView):
             "ai_trial_whatsapp_enabled",
         ).first()
         gemini_allowed = bool(organization and check_gemini_access(organization))
+        has_manual_gemini_access = bool(organization and organization.gemini_enabled)
 
         if qs is None:
             payload = {
@@ -155,7 +156,7 @@ class OrganizationActiveTariffAPIView(generics.GenericAPIView):
                 "active_until": None,
                 "gemini_allowed": gemini_allowed,
             }
-            if gemini_allowed:
+            if has_manual_gemini_access:
                 payload.update(
                     {
                         "tariff": {

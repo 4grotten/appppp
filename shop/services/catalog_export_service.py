@@ -33,7 +33,14 @@ class CatalogExportService:
         try:
             with catalog_file.open("rb") as catalog_stream:
                 catalog_data = json.load(catalog_stream)
-        except Exception:
+        except Exception as exc:
+            logger.exception(
+                "[EXCEL_EXPORT] Failed to read catalog JSON for org_id=%s source=%s file=%s error=%s",
+                organization.id,
+                catalog_source,
+                getattr(catalog_file, "name", None),
+                str(exc),
+            )
             return None
 
         if isinstance(catalog_data, dict):

@@ -265,9 +265,7 @@ class OrganizationAdmin(admin.ModelAdmin):
         PhoneInline,
         SocialInline,
         DiscountInline,
-        OrganizationVerificationUsersInLine,
         OrganizationPaymentSystemUsersInLine,  # 2:18
-        MembershipInLine,
         AssistantInline,
 
     )

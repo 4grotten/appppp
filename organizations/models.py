@@ -541,19 +541,21 @@ class MaalyPayOrganizationPaymentSystem(TimestampModel):
 
 class ProfitgateIntegration(models.Model):
     organization = models.OneToOneField(
-        'organizations.Organization',
+        'organizations.Organization', 
         on_delete=models.CASCADE,
         related_name='profitgate_integration',
         verbose_name="Организация"
     )
     merchant_id = models.CharField(max_length=255, verbose_name="Merchant ID")
-    endpoint_id = models.CharField(max_length=255, verbose_name="Endpoint ID")
-    api_secret = models.CharField(max_length=255, verbose_name="API Secret (Key)")
+    endpoint_id = models.CharField(max_length=255, null=True, blank=True, verbose_name="Endpoint ID")
+    api_secret = models.CharField(max_length=255, verbose_name="API Secret")
+    currencies = models.ManyToManyField(
+        'common.Currency', 
+        blank=True, 
+        verbose_name="Поддерживаемые валюты"
+    )
+    
     is_active = models.BooleanField(default=True, verbose_name="Активна")
-
-    class Meta:
-        verbose_name = "Интеграция Profitgate"
-        verbose_name_plural = "Интеграции Profitgate"
 
     def __str__(self):
         return f"Profitgate - {self.organization.title}"

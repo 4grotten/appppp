@@ -134,23 +134,29 @@ class OrganizationActiveTariffAPIView(generics.GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-
         qs = self.service_class.get_active_tariff(pk)
 
-        if qs is None:
-            organization = Organization.objects.filter(pk=pk).only(
-                "id",
-                "gemini_enabled",
-                "ai_trial_enabled",
-                "ai_trial_started_at",
-                "ai_trial_ends_at",
-                "ai_trial_web_chat_enabled",
-                "ai_trial_telegram_enabled",
-                "ai_trial_whatsapp_enabled",
-            ).first()
+        organization = Organization.objects.filter(pk=pk).only(
+            "id",
+            "gemini_enabled",
+            "ai_trial_enabled",
+            "ai_trial_started_at",
+            "ai_trial_ends_at",
+            "ai_trial_web_chat_enabled",
+            "ai_trial_telegram_enabled",
+            "ai_trial_whatsapp_enabled",
+        ).first()
+        gemini_allowed = bool(organization and check_gemini_access(organization))
 
-            if organization and check_gemini_access(organization):
-                return Response(
+        if qs is None:
+            payload = {
+                "tariff": None,
+                "is_active": False,
+                "active_until": None,
+                "gemini_allowed": gemini_allowed,
+            }
+            if gemini_allowed:
+                payload.update(
                     {
                         "tariff": {
                             "tariff_type": "gemini_access",
@@ -161,13 +167,14 @@ class OrganizationActiveTariffAPIView(generics.GenericAPIView):
                         },
                         "is_active": True,
                         "active_until": timezone.now(),
-                    },
-                    status=200,
+                    }
                 )
+            return Response(payload, status=200)
 
         serializer = self.serializer_class(instance=qs)
-
-        return Response(serializer.data, status=200)
+        data = serializer.data
+        data["gemini_allowed"] = gemini_allowed
+        return Response(data, status=200)
 
 
 class CreateOrganizationInfoAPIView(generics.GenericAPIView):

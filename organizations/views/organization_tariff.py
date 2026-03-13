@@ -1,6 +1,10 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.utils import timezone
+
+from organizations.models import Organization
+from organizations.services.ai_access_service import check_gemini_access
 
 from organizations.serializers.invoice_serializers import (
     ActiveTariffSerializer,
@@ -132,6 +136,34 @@ class OrganizationActiveTariffAPIView(generics.GenericAPIView):
         pk = kwargs.get("pk")
 
         qs = self.service_class.get_active_tariff(pk)
+
+        if qs is None:
+            organization = Organization.objects.filter(pk=pk).only(
+                "id",
+                "gemini_enabled",
+                "ai_trial_enabled",
+                "ai_trial_started_at",
+                "ai_trial_ends_at",
+                "ai_trial_web_chat_enabled",
+                "ai_trial_telegram_enabled",
+                "ai_trial_whatsapp_enabled",
+            ).first()
+
+            if organization and check_gemini_access(organization):
+                return Response(
+                    {
+                        "tariff": {
+                            "tariff_type": "gemini_access",
+                            "original_price": 0,
+                            "duration_months": 0,
+                            "total_price": 0,
+                            "discount": 0,
+                        },
+                        "is_active": True,
+                        "active_until": timezone.now(),
+                    },
+                    status=200,
+                )
 
         serializer = self.serializer_class(instance=qs)
 

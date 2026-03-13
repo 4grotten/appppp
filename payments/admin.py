@@ -15,6 +15,8 @@ from payments.models import (
     MaalyPaySettings,
     PaymentSystemMethod,
     PaySySettings,
+    ProfitgateOrganizationPaymentSystem,
+    ProfitgateSettings,
     ZinaPayOrganizationPaymentSystem,
 )
 
@@ -202,6 +204,53 @@ class ZinaPayOrganizationAdmin(admin.ModelAdmin):
         }),
         ('Настройки ZinaPay', {
             'fields': ('api_token', 'webhook_secret'),
+        }),
+        ('Валюты', {
+            'fields': ('currencies',),
+            'description': 'Поддерживаемые валюты. Пусто = все валюты поддерживаются.'
+        }),
+    )
+
+    def get_currencies(self, obj):
+        currencies = obj.currencies.all()
+        if currencies.exists():
+            return ', '.join([c.code for c in currencies[:5]])
+        return 'Все валюты'
+    get_currencies.short_description = 'Валюты'
+
+
+
+class ProfitgateOrgInline(admin.TabularInline):
+    """Инлайн для настроек Profitgate организаций"""
+    model = ProfitgateOrganizationPaymentSystem
+    extra = 0
+    verbose_name = "Настройки Profitgate для организации"
+    verbose_name_plural = "Настройки Profitgate для организаций"
+    fields = ('organization', 'merchant_id', 'endpoint_id', 'api_secret')
+    raw_id_fields = ('organization',)
+    readonly_fields = ('api_secret',)
+
+
+@admin.register(ProfitgateSettings)
+class ProfitgateSettingsAdmin(BasePaymentSystemAdmin):
+    PAYMENT_SYSTEM_ID = 7 
+
+
+@admin.register(ProfitgateOrganizationPaymentSystem)
+class ProfitgateOrganizationAdmin(admin.ModelAdmin):
+    """Админка для настроек Profitgate организаций"""
+    list_display = ['organization', 'merchant_id', 'get_currencies']
+    search_fields = ['organization__title', 'merchant_id']  # Используем title, так как мы фиксили эту ошибку
+    autocomplete_fields = ['organization']
+    list_select_related = ['organization']
+    filter_horizontal = ('currencies',)
+
+    fieldsets = (
+        ('Организация', {
+            'fields': ('organization',),
+        }),
+        ('Настройки Profitgate', {
+            'fields': ('merchant_id', 'endpoint_id', 'api_secret'),
         }),
         ('Валюты', {
             'fields': ('currencies',),

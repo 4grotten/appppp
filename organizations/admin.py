@@ -222,12 +222,6 @@ class AssistantInline(admin.StackedInline):
     get_html_photo.short_description = "Превью"
 
 
-@admin.register(ProfitgateIntegration)
-class ProfitgateIntegrationAdmin(admin.ModelAdmin):
-    list_display = ('organization', 'merchant_id', 'endpoint_id', 'is_active')
-    search_fields = ('organization__name', 'merchant_id', 'endpoint_id')
-    list_filter = ('is_active',)
-
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):

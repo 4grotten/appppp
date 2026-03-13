@@ -19,6 +19,8 @@ from organizations.models import (
     RegionalPaymentSystemSettings as OriginalRegionalPaymentSystemSettings,
 )
 
+from organizations.models import ProfitgateIntegration as OriginalProfitgateIntegration
+
 
 class RegionalPaymentSystemSettings(OriginalRegionalPaymentSystemSettings):
     """Proxy модель для группировки в Payments приложении"""
@@ -91,3 +93,17 @@ class PaymentSystemMethod(OriginalPaymentSystemMethod):
         proxy = True
         verbose_name = "Payment System Method"
         verbose_name_plural = "Payment System Methods"
+
+class ProfitgateOrganizationPaymentSystem(OriginalProfitgateIntegration):
+    """Настройки Profitgate для организаций (proxy)"""
+    class Meta:
+        proxy = True
+        verbose_name = "Настройки Profitgate для организации"
+        verbose_name_plural = "Profitgate - Настройки организаций"
+
+class ProfitgateSettings(OriginalRegionalPaymentSystemSettings):
+    """Настройки Profitgate по регионам"""
+    class Meta:
+        proxy = True
+        verbose_name = "Profitgate"
+        verbose_name_plural = "Profitgate - Настройки регионов"

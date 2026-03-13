@@ -557,6 +557,11 @@ class ProfitgateIntegration(models.Model):
 
     def __str__(self):
         return f"Profitgate - {self.organization.title}"
+    
+    class Meta:
+        verbose_name = "Profitgate - Настройка организации"
+        verbose_name_plural = "Profitgate - Настройки организаций"
+        app_label = 'payments'
 
 
 class ZinaPayOrganizationPaymentSystem(TimestampModel):
@@ -1683,6 +1688,7 @@ class RegionalPaymentSystemSettings(TimestampModel):
             (5, "CryptoCloud"),
             (6, "MaalyPay"),
             (7, "ZinaPay"),
+            (8, "Profitgate")
         ],
         help_text="ID платежной системы (совместим с существующим кодом)",
     )

@@ -44,12 +44,12 @@ class ProfitgateService:
         path = "/init"
         
         payload = {
-            "amount": str(transaction.amount),
+            "amount": str(transaction.final_amount),
             "order": str(transaction.id),
             "merchant_id": str(self.integration.merchant_id),
             "endpoint_id": str(self.integration.endpoint_id),
             "currency": str(transaction.currency.code),
-            "customer": str(transaction.user.id),
+            "customer": str(transaction.client.id) if transaction.client else "guest",
             "finish_url": finish_url,
             "notification_url": notification_url,
         }

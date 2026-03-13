@@ -4,7 +4,7 @@ import hashlib
 import hmac
 import requests
 import logging
-from django.conf import settings
+from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class ProfitgateService:
         
         return self._base64url_encode(signature)
 
-    def create_redirect_payment(self, transaction, finish_url=None, notification_url=None):
+    def create_redirect_payment(self, transaction, finish_url, notification_url):
         path = "/init"
         
         payload = {
@@ -48,55 +48,41 @@ class ProfitgateService:
             "order": str(transaction.id),
             "merchant_id": str(self.integration.merchant_id),
             "endpoint_id": str(self.integration.endpoint_id),
-            "currency": str(transaction.currency),
+            "currency": str(transaction.currency.code),
             "customer": str(transaction.user.id),
+            "finish_url": finish_url,
+            "notification_url": notification_url,
         }
-        if finish_url: payload["finish_url"] = finish_url
-        if notification_url: payload["notification_url"] = notification_url
 
         payload["signature"] = self.generate_signature(path, payload)
-
+        
         response = requests.post(f"{self.BASE_URL}{path}", json=payload)
         data = response.json()
 
         if response.status_code == 200 and data.get("status") == "redirect":
             return data.get("url")
         
-        logger.error(f"Profitgate redirect error: {data}")
-        raise ValueError(f"Payment init failed: {data}")
+        logger.error(f"Profitgate Init Error: {data}")
+        raise ValueError(f"Ошибка инициализации платежа: {data.get('message', 'Unknown')}")
 
-    def create_h2h_payment(self, transaction, card_data):
-        path = "/init" 
+    def check_payment_status(self, transaction):
+        path = "/status"
         payload = {
-            "amount": str(transaction.amount),
-            "order": str(transaction.id),
             "merchant_id": str(self.integration.merchant_id),
             "endpoint_id": str(self.integration.endpoint_id),
-            "currency": str(transaction.currency),
-            "customer": str(transaction.user.id),
-            "pan": str(card_data['pan']),
-            "expire_month": str(card_data['expire_month']),
-            "expire_year": str(card_data['expire_year']),
-            "cvc": str(card_data['cvc']),
-            "first_name": str(card_data['first_name']),
-            "last_name": str(card_data['last_name']),
+            "order": str(transaction.id),
         }
-        
         payload["signature"] = self.generate_signature(path, payload)
         
         response = requests.post(f"{self.BASE_URL}{path}", json=payload)
         return response.json()
 
-    def process_withdrawal(self, withdrawal_id, amount, currency, customer_id, pan):
-        path = "/withdrawal"
+    def process_refund(self, invoice_id, amount):
+        path = "/refund"
         payload = {
             "merchant_id": str(self.integration.merchant_id),
-            "endpoint_id": str(self.integration.endpoint_id),
-            "order": str(withdrawal_id),
-            "pan": str(pan),
+            "invoice_id": str(invoice_id),
             "amount": str(amount),
-            "currency": str(currency),
-            "customer": str(customer_id),
         }
         payload["signature"] = self.generate_signature(path, payload)
         

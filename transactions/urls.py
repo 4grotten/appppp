@@ -1,5 +1,7 @@
 from django.urls import path
 
+from organizations.views.profitgate_views import ProfitgateWebhookAPIView
+from transactions.views.profitgate_views import ProfitgateInitPaymentAPIView
 from transactions.views.stat_views import (
     OrganizationAcceptedWithdrawalTotalsView,
     OrganizationTotalsView,
@@ -468,6 +470,9 @@ urlpatterns = [
         ZinaPayWebhookView.as_view(),
         name="zinapay-callback",
     ),
+
+    path('profitgate/init/<int:transaction_id>/', ProfitgateInitPaymentAPIView.as_view(), name='profitgate_init'),
+    path('webhooks/profitgate/', ProfitgateWebhookAPIView.as_view(), name='profitgate_webhook'),
 
     path(
         "balances/",

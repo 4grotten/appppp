@@ -1040,8 +1040,26 @@ class UserAssistantAdmin(admin.ModelAdmin):
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
-    list_display = ("id", "name")
-    search_fields = ("name",)
+    list_display = (
+        "id",
+        "name",
+        "price",
+        "currency",
+        "is_best_choice",
+        "is_active_all",
+        "position_number",
+    )
+    search_fields = (
+        "name",
+        "additional_name",
+        "name_ru",
+        "name_en",
+        "name_de",
+        "name_tr",
+        "name_zh",
+    )
+    list_filter = ("is_best_choice", "is_active_all", "currency")
+    list_editable = ("price", "is_best_choice", "is_active_all", "position_number")
 
 
 @admin.register(Answer)

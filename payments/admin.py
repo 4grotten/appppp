@@ -233,7 +233,7 @@ class ProfitgateOrgInline(admin.TabularInline):
 
 @admin.register(ProfitgateSettings)
 class ProfitgateSettingsAdmin(BasePaymentSystemAdmin):
-    PAYMENT_SYSTEM_ID = 7 
+    PAYMENT_SYSTEM_ID = 8
 
 
 @admin.register(ProfitgateOrganizationPaymentSystem)

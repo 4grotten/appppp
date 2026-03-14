@@ -843,7 +843,7 @@ coupon_urls = [
         ElevenLabsGetShopItemToolView.as_view(),
         name='elevenlabs-tool-get-shop-item'),
 
-    path('elevenlabs/agents/str:agent_id/prompt/',
+    path('elevenlabs/agents/<str:agent_id>/prompt/',
          GetElevenLabsPromptView.as_view(),
          name='elevenlabs-get-prompt'),
 

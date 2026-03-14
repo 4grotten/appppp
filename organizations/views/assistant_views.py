@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 import requests
 from django.conf import settings
@@ -67,7 +68,7 @@ def fetch_elevenlabs_prompt(agent_id: str) -> str:
     )
 
 
-def sync_assistant_ai_prompt(assistant: Assistant) -> str | None:
+def sync_assistant_ai_prompt(assistant: Assistant) -> Optional[str]:
     agent_id = (assistant.voice_assistant_id or "").strip()
     if not agent_id:
         return None

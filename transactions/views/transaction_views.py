@@ -2,7 +2,8 @@ import hashlib
 import json
 from decimal import ROUND_DOWN, Decimal
 from time import time
-
+from organizations.services.profitgate_service import ProfitgateService
+from payments.models import ProfitgateOrganizationPaymentSystem
 import requests
 import xmltodict
 from django.conf import settings
@@ -2463,6 +2464,90 @@ class InitPaymentView(GenericAPIView):
                 data={"redirect_url": result["redirect_url"]},
                 status=status.HTTP_200_OK,
             )
+        elif kwargs["pk"] == 8:
+            transaction_id = serializer.validated_data["transaction_id"]
+            print(f"\n{'='*60}")
+            print("[Profitgate DEBUG] === INIT PAYMENT START ===")
+            print(f"[Profitgate DEBUG] transaction_id={transaction_id}")
+
+            try:
+                transaction = TransactionService.get(
+                    id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+                )
+            except Exception:
+                tx = Transaction.objects.filter(id=transaction_id).first()
+                if tx:
+                    if tx.is_processed:
+                        return Response(
+                            data={"error": "Эта транзакция уже оплачена"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    else:
+                        return Response(
+                            data={"error": f"Транзакция недоступна для оплаты (статус: {tx.status})"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                else:
+                    return Response(
+                        data={"error": "Транзакция не найдена"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+            if not transaction.organization:
+                return Response(
+                    data={"error": "У транзакции не указана организация"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            integration = ProfitgateOrganizationPaymentSystem.objects.filter(
+                organization=transaction.organization, is_active=True
+            ).first()
+
+            if not integration:
+                print("[Profitgate DEBUG] ERROR: Profitgate not configured!")
+                return Response(
+                    data={"error": "Profitgate не настроен для этой организации"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not integration.currencies.filter(code=transaction.currency.code).exists():
+                print(f"[Profitgate DEBUG] ERROR: Currency {transaction.currency.code} not allowed.")
+                return Response(
+                    data={"error": f"Оплата через Profitgate в валюте {transaction.currency.code} не поддерживается."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction)
+            success_url = TransactionService.get_success_url(request=request)
+            failure_url = TransactionService.get_failure_url(request=request)
+            notification_url = f"{base_url}transactions/webhooks/profitgate/"
+            print(f"[Profitgate DEBUG] final_amount={transaction.final_amount}, currency={transaction.currency.code}")
+            print(f"[Profitgate DEBUG] notification_url={notification_url}")
+            service = ProfitgateService(integration)
+            try:
+                redirect_url = service.create_redirect_payment(
+                    transaction=transaction, 
+                    finish_url=success_url, 
+                    notification_url=notification_url
+                )
+                transaction.payment_info = {
+                    "purchase_type": purchase_type,
+                    "user_id": self.request.user.id,
+                    "success_url": success_url,
+                    "failure_url": failure_url,
+                }
+                transaction.save(update_fields=["payment_info"])
+
+                print("[Profitgate DEBUG] === INIT PAYMENT SUCCESS ===")
+                print(f"{'='*60}\n")
+
+                return Response(
+                    data={"redirect_url": redirect_url},
+                    status=status.HTTP_200_OK,
+                )
+
+            except Exception as e:
+                print(f"[Profitgate DEBUG] ERROR: {str(e)}")
+                return Response(
+                    data={"error": "Ошибка инициализации Profitgate", "details": str(e)},
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
 
         else:
             return Response(

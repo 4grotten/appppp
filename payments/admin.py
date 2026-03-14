@@ -58,6 +58,10 @@ class BasePaymentSystemAdmin(admin.ModelAdmin):
             'fields': ('is_enabled_in_region', 'is_available_for_request', 'is_available_for_ai'),
             'description': 'Управление доступностью платёжной системы в выбранных регионах'
         }),
+        ('Конвертация', {
+            'fields': ('conversion_fee_percent',),
+            'description': 'Надбавка в процентах при оплате в другой валюте'
+        }),
     )
 
     def get_queryset(self, request) -> QuerySet:

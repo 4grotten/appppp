@@ -2,6 +2,7 @@ import hashlib
 import json
 from decimal import ROUND_DOWN, Decimal
 from time import time
+from organizations.models import RegionalPaymentSystemSettings
 from organizations.services.profitgate_service import ProfitgateService
 from payments.models import ProfitgateOrganizationPaymentSystem
 import requests
@@ -2509,6 +2510,14 @@ class InitPaymentView(GenericAPIView):
                     to_currency=target_currency,
                     amount=transaction.final_amount,
                 )
+                region_setting = RegionalPaymentSystemSettings.objects.filter(payment_system_id=8).first()
+                fee_percent = region_setting.conversion_fee_percent if region_setting else Decimal("0.00")
+
+                if fee_percent > 0:
+                    increase = converted_amount * (fee_percent / Decimal("100"))
+                    converted_amount += increase
+                    print(f"[Profitgate DEBUG] Added {fee_percent}% fee. Amount with fee: {converted_amount}")
+
                 converted_amount = Decimal(str(converted_amount)).quantize(
                     Decimal("0.00"), rounding=ROUND_DOWN
                 )

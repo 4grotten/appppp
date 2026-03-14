@@ -1702,6 +1702,14 @@ class RegionalPaymentSystemSettings(TimestampModel):
         help_text="Страны, для которых применяются эти настройки",
     )
 
+    conversion_fee_percent = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        default=0.00,
+        verbose_name="Процент при конвертации (%)",
+        help_text="Комиссия, которая добавляется к итоговой сумме при конвертации валюты"
+    )
+
     is_enabled_in_region = models.BooleanField(
         default=True,
         help_text="Платежка доступна в указанных странах",

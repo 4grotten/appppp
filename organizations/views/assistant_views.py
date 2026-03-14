@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 from shop.tasks import update_assistant_json_task
 from shop.models import ShopItem
 from rest_framework.filters import SearchFilter
+from project.settings.base import ELEVENLABS_API_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -522,7 +523,6 @@ class GetElevenLabsSignedUrlView(APIView):
             logger.error(f"Error in GetElevenLabsSignedUrlView: {str(e)}")
             return Response({"error": str(e)}, status=500)
         
-from project.settings.base import ELEVENLABS_API_KEY2
 
 
 class ProxyVoicesView(APIView):
@@ -649,6 +649,58 @@ class ElevenLabsGetShopItemToolView(APIView):
             status=status.HTTP_200_OK
         )
         
+
+
+class GetElevenLabsPromptView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, agent_id: str):
+
+        url = f"https://api.elevenlabs.io/v1/convai/agents/{agent_id}"
+
+        try:
+            response = requests.get(
+                url,
+                headers={"xi-api-key": ELEVENLABS_API_KEY},
+                timeout=10,
+            )
+
+            response.raise_for_status()
+
+        except requests.exceptions.RequestException as exc:
+            logger.exception("ElevenLabs API request failed")
+
+            return Response(
+                {"error": "Failed to fetch prompt from ElevenLabs"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        try:
+            data = response.json()
+
+            prompt = (
+                data.get("conversation_config", {})
+                .get("agent", {})
+                .get("prompt", {})
+                .get("prompt", "")
+            )
+
+        except Exception as exc:
+            logger.exception("Failed to parse ElevenLabs response")
+
+            return Response(
+                {"error": "Invalid response from ElevenLabs"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response(
+            {
+                "agent_id": agent_id,
+                "prompt": prompt,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 #=============================================================================================
 class AssistantSettingsUpdateView(generics.UpdateAPIView):
     queryset = Assistant.objects.all()

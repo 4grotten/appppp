@@ -246,6 +246,12 @@ class CommentService:
                 "ai_prompt": assistant.ai_prompt,
                 "first_message": assistant.first_message,
                 "ai_voice": assistant.ai_voice,
+                "external_api": {
+                    "name": assistant.external_api_name,
+                    "path": assistant.external_api_path,
+                    "api_key": assistant.external_api_key,
+                    "description": assistant.external_api_description,
+                },
             },
             "answers": [],
             "organization_page_url": org_url,

@@ -2478,54 +2478,62 @@ class InitPaymentView(GenericAPIView):
                 tx = Transaction.objects.filter(id=transaction_id).first()
                 if tx:
                     if tx.is_processed:
-                        return Response(
-                            data={"error": "Эта транзакция уже оплачена"},
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
+                        return Response(data={"error": "Эта транзакция уже оплачена"}, status=status.HTTP_400_BAD_REQUEST)
                     else:
-                        return Response(
-                            data={"error": f"Транзакция недоступна для оплаты (статус: {tx.status})"},
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
-                else:
-                    return Response(
-                        data={"error": "Транзакция не найдена"},
-                        status=status.HTTP_404_NOT_FOUND,
-                    )
+                        return Response(data={"error": f"Транзакция недоступна (статус: {tx.status})"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(data={"error": "Транзакция не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
             if not transaction.organization:
-                return Response(
-                    data={"error": "У транзакции не указана организация"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                return Response(data={"error": "У транзакции не указана организация"}, status=status.HTTP_400_BAD_REQUEST)
+
             integration = ProfitgateOrganizationPaymentSystem.objects.filter(
                 organization=transaction.organization, is_active=True
             ).first()
 
             if not integration:
-                print("[Profitgate DEBUG] ERROR: Profitgate not configured!")
-                return Response(
-                    data={"error": "Profitgate не настроен для этой организации"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                return Response(data={"error": "Profitgate не настроен"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # 1. Проверяем, разрешил ли админ принимать эту оригинальную валюту (например, AED)
             if not integration.currencies.filter(code=transaction.currency.code).exists():
                 print(f"[Profitgate DEBUG] ERROR: Currency {transaction.currency.code} not allowed.")
                 return Response(
-                    data={"error": f"Оплата через Profitgate в валюте {transaction.currency.code} не поддерживается."},
+                    data={"error": f"Оплата через Profitgate в валюте {transaction.currency.code} не поддерживается. Добавьте её в админке."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            target_currency = "RUB"
+            if transaction.currency.code != target_currency:
+                print(f"[Profitgate DEBUG] Converting {transaction.final_amount} {transaction.currency.code} to {target_currency}")
+                
+                converted_amount = CurrencyConverterService.convert(
+                    from_currency=transaction.currency.code,
+                    to_currency=target_currency,
+                    amount=transaction.final_amount,
+                )
+                # Округляем до двух знаков (как в PaySy/Libersave)
+                converted_amount = Decimal(str(converted_amount)).quantize(
+                    Decimal("0.00"), rounding=ROUND_DOWN
+                )
+            else:
+                converted_amount = transaction.final_amount
+                
+            print(f"[Profitgate DEBUG] Final Amount for Gateway: {converted_amount} {target_currency}")
+
             __, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction)
             success_url = TransactionService.get_success_url(request=request)
             failure_url = TransactionService.get_failure_url(request=request)
             notification_url = f"{base_url}transactions/webhooks/profitgate/"
-            print(f"[Profitgate DEBUG] final_amount={transaction.final_amount}, currency={transaction.currency.code}")
-            print(f"[Profitgate DEBUG] notification_url={notification_url}")
+            
             service = ProfitgateService(integration)
+
             try:
                 redirect_url = service.create_redirect_payment(
-                    transaction=transaction, 
+                    transaction=transaction,
+                    amount=converted_amount,         # <--- Передаем рубли
+                    currency_code=target_currency,   # <--- Жестко ставим RUB
                     finish_url=success_url, 
                     notification_url=notification_url
                 )
+                
                 transaction.payment_info = {
                     "purchase_type": purchase_type,
                     "user_id": self.request.user.id,
@@ -2537,10 +2545,7 @@ class InitPaymentView(GenericAPIView):
                 print("[Profitgate DEBUG] === INIT PAYMENT SUCCESS ===")
                 print(f"{'='*60}\n")
 
-                return Response(
-                    data={"redirect_url": redirect_url},
-                    status=status.HTTP_200_OK,
-                )
+                return Response(data={"redirect_url": redirect_url}, status=status.HTTP_200_OK)
 
             except Exception as e:
                 print(f"[Profitgate DEBUG] ERROR: {str(e)}")
@@ -2548,12 +2553,6 @@ class InitPaymentView(GenericAPIView):
                     data={"error": "Ошибка инициализации Profitgate", "details": str(e)},
                     status=status.HTTP_502_BAD_GATEWAY,
                 )
-
-        else:
-            return Response(
-                data={"error": "Payment System Not Found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
 
 
 class NewInitPaymentView(GenericAPIView):

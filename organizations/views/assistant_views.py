@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 import requests
 from django.conf import settings
@@ -17,6 +18,7 @@ from rest_framework.views import APIView
 from shop.tasks import update_assistant_json_task
 from shop.models import ShopItem
 from rest_framework.filters import SearchFilter
+from project.settings.base import ELEVENLABS_API_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +48,37 @@ from organizations.services.assistant_services import (
 )
 from organizations.services.organization_services import OrganizationService
 from shop.services.comment_services import CommentService
+
+
+def fetch_elevenlabs_prompt(agent_id: str) -> str:
+    url = f"https://api.elevenlabs.io/v1/convai/agents/{agent_id}"
+    response = requests.get(
+        url,
+        headers={"xi-api-key": ELEVENLABS_API_KEY},
+        timeout=10,
+    )
+    response.raise_for_status()
+
+    data = response.json()
+    return (
+        data.get("conversation_config", {})
+        .get("agent", {})
+        .get("prompt", {})
+        .get("prompt", "")
+    )
+
+
+def sync_assistant_ai_prompt(assistant: Assistant) -> Optional[str]:
+    agent_id = (assistant.voice_assistant_id or "").strip()
+    if not agent_id:
+        return None
+
+    prompt = fetch_elevenlabs_prompt(agent_id)
+    if prompt != (assistant.ai_prompt or ""):
+        Assistant.objects.filter(pk=assistant.pk).update(ai_prompt=prompt)
+        assistant.ai_prompt = prompt
+
+    return prompt
 
 
 class OrganizationAssistantCreateView(APIView):
@@ -99,6 +132,25 @@ class OrganizationAssistantRetrieveUpdateView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return AssistantService.get(id=self.kwargs['pk'])
+
+    def get(self, request, *args, **kwargs):
+        assistant = self.get_object()
+
+        try:
+            sync_assistant_ai_prompt(assistant)
+        except requests.exceptions.RequestException:
+            logger.exception(
+                "Failed to sync ai_prompt from ElevenLabs for assistant_id=%s",
+                assistant.id,
+            )
+        except Exception:
+            logger.exception(
+                "Unexpected error while syncing ai_prompt for assistant_id=%s",
+                assistant.id,
+            )
+
+        serializer = self.get_serializer(assistant)
+        return Response(serializer.data)
 
 
 class OrganizationAssistantAnswerRetrieveUpdateView(generics.RetrieveUpdateAPIView):
@@ -522,7 +574,6 @@ class GetElevenLabsSignedUrlView(APIView):
             logger.error(f"Error in GetElevenLabsSignedUrlView: {str(e)}")
             return Response({"error": str(e)}, status=500)
         
-from project.settings.base import ELEVENLABS_API_KEY2
 
 
 class ProxyVoicesView(APIView):
@@ -649,6 +700,37 @@ class ElevenLabsGetShopItemToolView(APIView):
             status=status.HTTP_200_OK
         )
         
+
+
+class GetElevenLabsPromptView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, agent_id: str):
+        try:
+            prompt = fetch_elevenlabs_prompt(agent_id)
+        except requests.exceptions.RequestException:
+            logger.exception("ElevenLabs API request failed")
+
+            return Response(
+                {"error": "Failed to fetch prompt from ElevenLabs"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        except Exception:
+            logger.exception("Failed to parse ElevenLabs response")
+
+            return Response(
+                {"error": "Invalid response from ElevenLabs"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response(
+            {
+                "agent_id": agent_id,
+                "prompt": prompt,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 #=============================================================================================
 class AssistantSettingsUpdateView(generics.UpdateAPIView):
     queryset = Assistant.objects.all()

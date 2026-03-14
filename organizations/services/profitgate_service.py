@@ -40,7 +40,7 @@ class ProfitgateService:
         
         return self._base64url_encode(signature)
 
-    def create_redirect_payment(self, transaction, finish_url, currency_code, notification_url):
+    def create_redirect_payment(self, transaction, amount, currency_code, finish_url, notification_url):
         path = "/init"
         
         payload = {

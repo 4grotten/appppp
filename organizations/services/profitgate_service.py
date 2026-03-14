@@ -40,15 +40,15 @@ class ProfitgateService:
         
         return self._base64url_encode(signature)
 
-    def create_redirect_payment(self, transaction, finish_url, notification_url):
+    def create_redirect_payment(self, transaction, amount, currency_code, finish_url, notification_url):
         path = "/init"
         
         payload = {
-            "amount": str(transaction.final_amount),
+            "amount": "{:.2f}".format(float(amount)),
             "order": str(transaction.id),
             "merchant_id": str(self.integration.merchant_id),
             "endpoint_id": str(self.integration.endpoint_id),
-            "currency": str(transaction.currency.code),
+            "currency": str(currency_code),
             "customer": str(transaction.client.id) if transaction.client else "guest",
             "finish_url": finish_url,
             "notification_url": notification_url,

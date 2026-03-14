@@ -46,6 +46,13 @@ class RegionalPaymentSystemService:
             'activated_field': 'zina_pay_activated',
             'multi_currency': True,  # Поддерживает AED, USD, EUR, GBP, SAR, QAR, INR, BHD, KWD, OMR
         },
+        8: {
+            'name': 'Profitgate',
+            'currency': 'RUB',
+            'confirmed_field': 'profitgate_confirmed',  # Убрали _pay_
+            'activated_field': 'profitgate_activated',  # Убрали _pay_
+            'multi_currency': True,
+        },
     }
 
     @classmethod
@@ -61,6 +68,18 @@ class RegionalPaymentSystemService:
         if config:
             return list(config.currencies.values_list('code', flat=True))
         # Пустой список = все валюты поддерживаются
+        return []
+    
+    @classmethod
+    def _get_profitgate_currencies(cls, organization) -> list:
+        """Получает список валют из конфига Profitgate организации."""
+        # Импортируем нашу прокси-модель из payments
+        from payments.models import ProfitgateOrganizationPaymentSystem 
+        config = ProfitgateOrganizationPaymentSystem.objects.filter(
+            organization=organization
+        ).prefetch_related('currencies').first()
+        if config:
+            return list(config.currencies.values_list('code', flat=True))
         return []
 
     @classmethod
@@ -85,6 +104,8 @@ class RegionalPaymentSystemService:
             return cls._get_maalypay_currencies(organization)
         elif ps_id == 7:  # ZinaPay
             return cls._get_zinapay_currencies(organization)
+        elif ps_id == 8:  # Profitgate
+            return cls._get_profitgate_currencies(organization)
         return []
 
     @classmethod

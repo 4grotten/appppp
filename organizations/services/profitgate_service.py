@@ -44,7 +44,7 @@ class ProfitgateService:
         path = "/init"
         
         payload = {
-            "amount": str(transaction.final_amount),
+            "amount": "{:.2f}".format(float(amount)),
             "order": str(transaction.id),
             "merchant_id": str(self.integration.merchant_id),
             "endpoint_id": str(self.integration.endpoint_id),

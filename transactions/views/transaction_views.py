@@ -2509,7 +2509,6 @@ class InitPaymentView(GenericAPIView):
                     to_currency=target_currency,
                     amount=transaction.final_amount,
                 )
-                # Округляем до двух знаков (как в PaySy/Libersave)
                 converted_amount = Decimal(str(converted_amount)).quantize(
                     Decimal("0.00"), rounding=ROUND_DOWN
                 )

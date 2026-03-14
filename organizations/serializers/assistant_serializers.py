@@ -42,7 +42,21 @@ class AssistantCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Assistant
-        fields = ("id", "organization", "name", "gender", "position", "image","ai_prompt", "first_message", "ai_voice")
+        fields = (
+            "id",
+            "organization",
+            "name",
+            "gender",
+            "position",
+            "image",
+            "ai_prompt",
+            "first_message",
+            "ai_voice",
+            "external_api_key",
+            "external_api_path",
+            "external_api_name",
+            "external_api_description",
+        )
 
     def validate_organization(self, organization):
         if AssistantService.exists_for_organization(organization=organization):
@@ -54,7 +68,17 @@ class AssistantCreateSerializer(serializers.ModelSerializer):
 class AssistantSettingsUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assistant
-        fields = ("ai_prompt", "first_message", "ai_voice","voice_name","voice_assistant_id")
+        fields = (
+            "ai_prompt",
+            "first_message",
+            "ai_voice",
+            "voice_name",
+            "voice_assistant_id",
+            "external_api_key",
+            "external_api_path",
+            "external_api_name",
+            "external_api_description",
+        )
 
     def validate_ai_voice(self, value):
         if not value:
@@ -105,7 +129,11 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
             "ai_prompt",
             "first_message",
             "ai_voice",
-            "voice_name"
+            "voice_name",
+            "external_api_key",
+            "external_api_path",
+            "external_api_name",
+            "external_api_description",
         )
         read_only_fields = ("organization",)
 

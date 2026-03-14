@@ -1312,6 +1312,10 @@ class Assistant(TimestampModel):
     ai_voice = models.CharField(max_length=255, null=True, blank=True)
     voice_name = models.CharField(max_length=255, null=True, blank=True)
     voice_assistant_id = models.CharField(max_length=255, null=True, blank=True, help_text="id агента")
+    external_api_key = models.CharField(max_length=512, null=True, blank=True)
+    external_api_path = models.URLField(max_length=1024, null=True, blank=True)
+    external_api_name = models.CharField(max_length=255, null=True, blank=True)
+    external_api_description = models.TextField(null=True, blank=True)
 
     catalog_file = models.FileField(
         upload_to="assistants_data",

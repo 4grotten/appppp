@@ -1,6 +1,5 @@
 import logging
-from typing import Optional
-
+from typing import Any, Dict, Optional
 import requests
 from django.conf import settings
 from django.db import models
@@ -50,7 +49,7 @@ from organizations.services.organization_services import OrganizationService
 from shop.services.comment_services import CommentService
 
 
-def fetch_elevenlabs_prompt(agent_id: str) -> str:
+def fetch_elevenlabs_agent(agent_id: str) -> Dict[str, Any]:
     url = f"https://api.elevenlabs.io/v1/convai/agents/{agent_id}"
     response = requests.get(
         url,
@@ -59,26 +58,99 @@ def fetch_elevenlabs_prompt(agent_id: str) -> str:
     )
     response.raise_for_status()
 
-    data = response.json()
-    return (
-        data.get("conversation_config", {})
-        .get("agent", {})
-        .get("prompt", {})
-        .get("prompt", "")
+    return response.json()
+
+
+def _get_nested_value(data: Dict[str, Any], *keys: str) -> Optional[Any]:
+    current: Any = data
+    for key in keys:
+        if not isinstance(current, dict):
+            return None
+        current = current.get(key)
+        if current is None:
+            return None
+    return current
+
+
+def fetch_elevenlabs_agent_config(agent_id: str) -> Dict[str, str]:
+    data = fetch_elevenlabs_agent(agent_id)
+
+    prompt = (
+        _get_nested_value(data, "conversation_config", "agent", "prompt", "prompt")
+        or _get_nested_value(data, "conversation_config", "agent", "prompt")
+        or _get_nested_value(data, "agent", "prompt", "prompt")
+        or _get_nested_value(data, "agent", "prompt")
+        or ""
     )
 
+    first_message = (
+        _get_nested_value(data, "conversation_config", "agent", "first_message")
+        or _get_nested_value(data, "conversation_config", "first_message")
+        or _get_nested_value(data, "agent", "first_message")
+        or _get_nested_value(data, "first_message")
+        or ""
+    )
 
-def sync_assistant_ai_prompt(assistant: Assistant) -> Optional[str]:
+    voice_id = (
+        _get_nested_value(data, "conversation_config", "tts", "voice_id")
+        or _get_nested_value(data, "conversation_config", "tts", "voice", "voice_id")
+        or _get_nested_value(data, "conversation_config", "voice", "voice_id")
+        or _get_nested_value(data, "conversation_config", "voice_id")
+        or _get_nested_value(data, "tts", "voice_id")
+        or _get_nested_value(data, "voice", "voice_id")
+        or _get_nested_value(data, "voice_id")
+        or ""
+    )
+
+    voice_name = (
+        _get_nested_value(data, "conversation_config", "tts", "voice", "name")
+        or _get_nested_value(data, "conversation_config", "voice", "name")
+        or _get_nested_value(data, "tts", "voice", "name")
+        or _get_nested_value(data, "voice", "name")
+        or _get_nested_value(data, "voice_name")
+        or ""
+    )
+
+    return {
+        "prompt": prompt if isinstance(prompt, str) else str(prompt),
+        "first_message": first_message if isinstance(first_message, str) else str(first_message),
+        "voice_id": voice_id if isinstance(voice_id, str) else str(voice_id),
+        "voice_name": voice_name if isinstance(voice_name, str) else str(voice_name),
+    }
+
+
+def fetch_elevenlabs_prompt(agent_id: str) -> str:
+    return fetch_elevenlabs_agent_config(agent_id)["prompt"]
+
+
+def sync_assistant_ai_prompt(assistant: Assistant) -> Optional[Dict[str, str]]:
     agent_id = (assistant.voice_assistant_id or "").strip()
     if not agent_id:
         return None
 
-    prompt = fetch_elevenlabs_prompt(agent_id)
-    if prompt != (assistant.ai_prompt or ""):
-        Assistant.objects.filter(pk=assistant.pk).update(ai_prompt=prompt)
-        assistant.ai_prompt = prompt
+    agent_config = fetch_elevenlabs_agent_config(agent_id)
+    fields_to_update = {}
 
-    return prompt
+    if agent_config["prompt"] != (assistant.ai_prompt or ""):
+        fields_to_update["ai_prompt"] = agent_config["prompt"]
+        assistant.ai_prompt = agent_config["prompt"]
+
+    if agent_config["first_message"] != (assistant.first_message or ""):
+        fields_to_update["first_message"] = agent_config["first_message"]
+        assistant.first_message = agent_config["first_message"]
+
+    if agent_config["voice_id"] and agent_config["voice_id"] != (assistant.ai_voice or ""):
+        fields_to_update["ai_voice"] = agent_config["voice_id"]
+        assistant.ai_voice = agent_config["voice_id"]
+
+    if agent_config["voice_name"] and agent_config["voice_name"] != (assistant.voice_name or ""):
+        fields_to_update["voice_name"] = agent_config["voice_name"]
+        assistant.voice_name = agent_config["voice_name"]
+
+    if fields_to_update:
+        Assistant.objects.filter(pk=assistant.pk).update(**fields_to_update)
+
+    return agent_config
 
 
 class OrganizationAssistantCreateView(APIView):
@@ -707,7 +779,7 @@ class GetElevenLabsPromptView(APIView):
 
     def get(self, request, agent_id: str):
         try:
-            prompt = fetch_elevenlabs_prompt(agent_id)
+            agent_config = fetch_elevenlabs_agent_config(agent_id)
         except requests.exceptions.RequestException:
             logger.exception("ElevenLabs API request failed")
 
@@ -726,7 +798,10 @@ class GetElevenLabsPromptView(APIView):
         return Response(
             {
                 "agent_id": agent_id,
-                "prompt": prompt,
+                "prompt": agent_config["prompt"],
+                "first_message": agent_config["first_message"],
+                "voice_id": agent_config["voice_id"],
+                "voice_name": agent_config["voice_name"],
             },
             status=status.HTTP_200_OK,
         )

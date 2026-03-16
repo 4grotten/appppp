@@ -3,6 +3,8 @@ import json
 import logging
 
 import pandas as pd
+from api_keys.models import AWSConfig
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.utils import timezone
 
@@ -10,8 +12,49 @@ logger = logging.getLogger(__name__)
 
 
 class CatalogExportService:
+    @staticmethod
+    def _mask_key(raw_key):
+        if not raw_key:
+            return "not-set"
+        key = str(raw_key)
+        if len(key) <= 8:
+            return f"{key[:2]}***{key[-2:]}"
+        return f"{key[:4]}***{key[-4:]}"
+
+    @classmethod
+    def _log_aws_key_context(cls, organization_id):
+        active_aws_config = AWSConfig.objects.filter(is_active=True).first()
+        env_key = getattr(settings, "AWS_ACCESS_KEY_ID", None)
+
+        if active_aws_config:
+            logger.info(
+                "[EXCEL_EXPORT] AWS key context org_id=%s source=db_active config_id=%s access_key_id=%s bucket=%s region=%s",
+                organization_id,
+                active_aws_config.id,
+                cls._mask_key(active_aws_config.access_key_id),
+                getattr(settings, "AWS_STORAGE_BUCKET_NAME", None),
+                getattr(settings, "AWS_S3_REGION_NAME", None),
+            )
+
+            if env_key:
+                logger.info(
+                    "[EXCEL_EXPORT] AWS env fallback currently configured org_id=%s env_access_key_id=%s",
+                    organization_id,
+                    cls._mask_key(env_key),
+                )
+            return
+
+        logger.info(
+            "[EXCEL_EXPORT] AWS key context org_id=%s source=env_only access_key_id=%s bucket=%s region=%s",
+            organization_id,
+            cls._mask_key(env_key),
+            getattr(settings, "AWS_STORAGE_BUCKET_NAME", None),
+            getattr(settings, "AWS_S3_REGION_NAME", None),
+        )
+
     @classmethod
     def export_latest_catalog_to_excel(cls, organization):
+        cls._log_aws_key_context(organization.id)
         organization.refresh_from_db(fields=["catalog_file", "catalog_excel_file"])
         assistant = getattr(organization, "assistant", None)
         catalog_file = getattr(organization, "catalog_file", None)

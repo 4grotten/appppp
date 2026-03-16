@@ -27,6 +27,7 @@ from messenger_bots.models import BotChat, BotPlatform
 from organizations.serializers.assistant_serializers import (
     AnswerFileSerializer,
     AssistantCreateSerializer,
+    AssistantExternalApiSettingsSerializer,
     AssistantSettingsUpdateSerializer,
     ChatByOrgUserSerializer,
     ChatListSerializer,
@@ -935,4 +936,28 @@ class GetElevenLabsPromptView(APIView):
 class AssistantSettingsUpdateView(generics.UpdateAPIView):
     queryset = Assistant.objects.all()
     serializer_class = AssistantSettingsUpdateSerializer
+    permission_classes = [IsAuthenticated]
 
+    def get_object(self):
+        assistant = AssistantService.get(id=self.kwargs["pk"])
+        if not OrganizationService.user_can_edit_organization(
+            organization=assistant.organization,
+            user=self.request.user,
+        ):
+            raise PermissionDenied({"message": _("No rights to edit organization")})
+        return assistant
+
+
+class AssistantExternalApiSettingsView(generics.RetrieveUpdateAPIView):
+    queryset = Assistant.objects.all()
+    serializer_class = AssistantExternalApiSettingsSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        assistant = AssistantService.get(id=self.kwargs["pk"])
+        if not OrganizationService.user_can_edit_organization(
+            organization=assistant.organization,
+            user=self.request.user,
+        ):
+            raise PermissionDenied({"message": _("No rights to edit organization")})
+        return assistant

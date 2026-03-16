@@ -251,6 +251,8 @@ class CommentService:
                     "path": assistant.external_api_path,
                     "api_key": assistant.external_api_key,
                     "description": assistant.external_api_description,
+                    "body": assistant.external_api_body or {},
+                    "methods": assistant.external_api_methods or [],
                 },
             },
             "answers": [],

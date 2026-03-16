@@ -1316,6 +1316,8 @@ class Assistant(TimestampModel):
     external_api_path = models.URLField(max_length=1024, null=True, blank=True)
     external_api_name = models.CharField(max_length=255, null=True, blank=True)
     external_api_description = models.TextField(null=True, blank=True)
+    external_api_body = models.JSONField(default=dict, blank=True)
+    external_api_methods = models.JSONField(default=list, blank=True)
 
     catalog_file = models.FileField(
         upload_to="assistants_data",

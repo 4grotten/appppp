@@ -23,6 +23,36 @@ from users.models import User
 from users.serializers import UserShortInfoSerializer
 
 
+class ExternalApiMethodsField(serializers.ListField):
+    child = serializers.CharField(max_length=16)
+
+    def to_internal_value(self, data):
+        if data in (None, ""):
+            data = []
+        elif isinstance(data, str):
+            data = [item.strip() for item in data.split(",") if item.strip()]
+
+        return super().to_internal_value(data)
+
+
+def normalize_external_api_methods(value):
+    allowed_methods = {"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"}
+    normalized_methods = []
+
+    for method in value:
+        normalized_method = method.strip().upper()
+        if not normalized_method:
+            continue
+        if normalized_method not in allowed_methods:
+            raise serializers.ValidationError(
+                _("Unsupported HTTP method: %(method)s") % {"method": method}
+            )
+        if normalized_method not in normalized_methods:
+            normalized_methods.append(normalized_method)
+
+    return normalized_methods
+
+
 class AnswerFileSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
 
@@ -39,6 +69,8 @@ class AssistantCreateSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(
         required=True, queryset=Organization.objects.all()
     )
+    external_api_body = serializers.JSONField(required=False)
+    external_api_methods = ExternalApiMethodsField(required=False)
 
     class Meta:
         model = Assistant
@@ -56,6 +88,8 @@ class AssistantCreateSerializer(serializers.ModelSerializer):
             "external_api_path",
             "external_api_name",
             "external_api_description",
+            "external_api_body",
+            "external_api_methods",
         )
 
     def validate_organization(self, organization):
@@ -64,6 +98,9 @@ class AssistantCreateSerializer(serializers.ModelSerializer):
                 _("Assistant already exists in this organization.")
             )
         return organization
+
+    def validate_external_api_methods(self, value):
+        return normalize_external_api_methods(value)
 
 class AssistantSettingsUpdateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -74,16 +111,31 @@ class AssistantSettingsUpdateSerializer(serializers.ModelSerializer):
             "ai_voice",
             "voice_name",
             "voice_assistant_id",
-            "external_api_key",
-            "external_api_path",
-            "external_api_name",
-            "external_api_description",
         )
 
     def validate_ai_voice(self, value):
         if not value:
             raise serializers.ValidationError("Voice ID is required.")
         return value
+
+
+class AssistantExternalApiSettingsSerializer(serializers.ModelSerializer):
+    external_api_body = serializers.JSONField(required=False)
+    external_api_methods = ExternalApiMethodsField(required=False)
+
+    class Meta:
+        model = Assistant
+        fields = (
+            "external_api_key",
+            "external_api_path",
+            "external_api_name",
+            "external_api_description",
+            "external_api_body",
+            "external_api_methods",
+        )
+
+    def validate_external_api_methods(self, value):
+        return normalize_external_api_methods(value)
 
 
 class ElevenLabsAgentCreateSerializer(serializers.Serializer):
@@ -126,6 +178,8 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
     active_until = serializers.SerializerMethodField()
     is_enabled = serializers.BooleanField(read_only=True)
     plans = serializers.SerializerMethodField()
+    external_api_body = serializers.JSONField(required=False, read_only=True)
+    external_api_methods = ExternalApiMethodsField(required=False, read_only=True)
 
     class Meta:
         model = Assistant
@@ -149,6 +203,8 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
             "external_api_path",
             "external_api_name",
             "external_api_description",
+            "external_api_body",
+            "external_api_methods",
         )
         read_only_fields = ("organization",)
 

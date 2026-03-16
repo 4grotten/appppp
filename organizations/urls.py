@@ -9,6 +9,7 @@ from .views.assistant_views import (
     AnswerFileCreateView,
     AssistantChatReadMessages,
     AssistantChatsListView,
+    AssistantExternalApiSettingsView,
     AssistantPlansListView,
     AutoChatOrByOrgUserView,
     ChatDetailRetrieveView,
@@ -866,7 +867,11 @@ coupon_urls = [
 
     path('assistant/<int:pk>/ai-prompt/',
          AssistantSettingsUpdateView.as_view(),
-         name='assistant-aiprompt-update')
+        name='assistant-aiprompt-update'),
+
+    path('assistant/<int:pk>/external-api/',
+        AssistantExternalApiSettingsView.as_view(),
+        name='assistant-external-api-settings')
 ]
 
 

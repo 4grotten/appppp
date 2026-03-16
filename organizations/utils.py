@@ -1,5 +1,6 @@
 import boto3
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from decimal import Decimal
 from api_keys.models import AWSConfig
 
@@ -16,12 +17,16 @@ class JSONQuerySet(list):
 
 def create_download_url(file_key):
     active_aws_config = AWSConfig.objects.filter(is_active=True).first()
-    aws_access_key_id = settings.AWS_ACCESS_KEY_ID
-    aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY
-
     if active_aws_config:
-        aws_access_key_id = active_aws_config.access_key_id or aws_access_key_id
-        aws_secret_access_key = active_aws_config.secret_access_key or aws_secret_access_key
+        if not active_aws_config.access_key_id or not active_aws_config.secret_access_key:
+            raise ImproperlyConfigured(
+                "Active AWSConfig must contain both access_key_id and secret_access_key"
+            )
+        aws_access_key_id = active_aws_config.access_key_id
+        aws_secret_access_key = active_aws_config.secret_access_key
+    else:
+        aws_access_key_id = settings.AWS_ACCESS_KEY_ID
+        aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY
 
     s3 = boto3.client(
         "s3",

@@ -38,7 +38,7 @@ class CatalogExportService:
 
             if env_key:
                 logger.info(
-                    "[EXCEL_EXPORT] AWS env fallback currently configured org_id=%s env_access_key_id=%s",
+                    "[EXCEL_EXPORT] AWS env key configured but ignored (db_active) org_id=%s env_access_key_id=%s",
                     organization_id,
                     cls._mask_key(env_key),
                 )

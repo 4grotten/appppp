@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("organizations", "0197_regionalpaymentsystemsettings_conversion_fee_percent"),
+        ("organizations", "0196_assistant_external_api_methods"),
     ]
 
     operations = [

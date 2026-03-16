@@ -19,8 +19,13 @@ from .views.assistant_views import (
     OrganizationAssistantRetrieveUpdateView,
     PurchaseAssistantView,
     QuestionListView,
-    ToggleAssistantEnableView, GetElevenLabsSignedUrlView, AssistantSettingsUpdateView, ProxyVoicesView,
-    ElevenLabsGetShopItemToolView, GetElevenLabsPromptView
+    ToggleAssistantEnableView,
+    GetElevenLabsSignedUrlView,
+    AssistantSettingsUpdateView,
+    ProxyVoicesView,
+    ElevenLabsGetShopItemToolView,
+    GetElevenLabsPromptView,
+    CreateElevenLabsAgentView,
 )
 from .views.attendance_views import (
     AttendanceStatsView,
@@ -541,6 +546,16 @@ organization_urls = [
         "organizations/assistant/<int:pk>/chats/",
         AssistantChatsListView.as_view(),
         name="org_assistant_chats",
+    ),
+    path(
+        "organizations/assistant/elevenlabs-agent/create/",
+        CreateElevenLabsAgentView.as_view(),
+        name="org_assistant_elevenlabs_agent_create_by_org",
+    ),
+    path(
+        "organizations/assistant/<int:pk>/elevenlabs-agent/create/",
+        CreateElevenLabsAgentView.as_view(),
+        name="org_assistant_elevenlabs_agent_create",
     ),
     path(
         "organizations/tariffs/",

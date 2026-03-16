@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from api_keys.models import GeminiConfig, GPTAssistConfig, InstagramConfig, ChatGPTConfig, GeminiTextModelConfig, GeminiImageModelConfig
+from api_keys.models import GeminiConfig, GPTAssistConfig, InstagramConfig, ChatGPTConfig, GeminiTextModelConfig, GeminiImageModelConfig, AWSConfig
 from instagram_parsers.models import InstagramApi
 from common.models import ChatGPTSettings
 # Register your models here.
@@ -185,5 +185,21 @@ class GPTAssistConfigAdmin(admin.ModelAdmin):
         ("Account Login", {
             "fields": ("link", "login", "password"),
             "description": "Данные аккаунта"
+        }),
+    )
+
+
+@admin.register(AWSConfig)
+class AWSConfigAdmin(admin.ModelAdmin):
+    list_display = ("id", "is_active", "created_at", "updated_at")
+    list_filter = ("is_active", "created_at")
+    readonly_fields = ("created_at", "updated_at")
+    fieldsets = (
+        ("AWS Credentials", {
+            "fields": ("access_key_id", "secret_access_key", "is_active"),
+        }),
+        ("Timestamps", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",)
         }),
     )

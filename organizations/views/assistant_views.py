@@ -2,7 +2,7 @@ import logging
 from typing import Any, Dict, Optional
 import requests
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from django.db.models import BooleanField, Case, F, Max, OuterRef, Subquery, Value, When
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
@@ -27,10 +27,12 @@ from messenger_bots.models import BotChat, BotPlatform
 from organizations.serializers.assistant_serializers import (
     AnswerFileSerializer,
     AssistantCreateSerializer,
+    AssistantSettingsUpdateSerializer,
     ChatByOrgUserSerializer,
     ChatListSerializer,
     ChatSerializer,
     ChatSerializerQueryParam,
+    ElevenLabsAgentCreateSerializer,
     OrganizationAssistantAnswerCreateSerializer,
     OrganizationAssistantAnswerRetrieveSerializer,
     OrganizationAssistantSerializer,
@@ -38,12 +40,16 @@ from organizations.serializers.assistant_serializers import (
     PurchaseAssistantSerializer,
     QuestionListQueryParamSerializer,
     QuestionListSerializer,
-    ToggleAssistantSerializer, AssistantSettingsUpdateSerializer,
+    ToggleAssistantSerializer,
 )
 from organizations.services.assistant_services import (
     AnswerService,
     AssistantService,
     ChatService,
+)
+from organizations.services.elevenlabs_agent_service import (
+    ElevenLabsAgentService,
+    ElevenLabsAgentServiceError,
 )
 from organizations.services.organization_services import OrganizationService
 from shop.services.comment_services import CommentService
@@ -666,6 +672,125 @@ class ProxyVoicesView(APIView):
 
         except Exception as e:
             return Response({"error": f"Failed to connect to AI server: {str(e)}"}, status=500)
+
+
+class CreateElevenLabsAgentView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ElevenLabsAgentCreateSerializer
+
+    def post(self, request, pk: Optional[int] = None):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {
+                    "message": _("Invalid input"),
+                    "errors": serializer.errors,
+                },
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
+
+        data = serializer.validated_data
+
+        assistant = None
+        if pk is not None:
+            assistant = AssistantService.get(id=pk)
+        else:
+            organization_id = data.get("organization_id")
+            if not organization_id:
+                return Response(
+                    {
+                        "error": "organization_id is required when assistant pk is not provided",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            assistant = Assistant.objects.filter(organization_id=organization_id).first()
+            if not assistant:
+                return Response(
+                    {
+                        "error": _("Assistant not found"),
+                    },
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+        if not OrganizationService.user_can_edit_organization(
+            organization=assistant.organization,
+            user=request.user,
+        ):
+            raise PermissionDenied({"message": _("No rights to edit organization")})
+
+        if assistant.voice_assistant_id and not data.get("force_create", False):
+            return Response(
+                {
+                    "error": "Agent already exists for this assistant",
+                    "assistant_id": assistant.id,
+                    "organization_id": assistant.organization_id,
+                    "existing_agent_id": assistant.voice_assistant_id,
+                    "hint": "Use force_create=true only if you intentionally want to replace existing agent",
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        try:
+            creation_result = ElevenLabsAgentService.create_agent(
+                conversation_config=data["conversation_config"],
+                name=data.get("name") or assistant.name,
+                tags=data.get("tags"),
+                platform_settings=data.get("platform_settings"),
+                workflow=data.get("workflow"),
+                enable_versioning=data.get("enable_versioning", False),
+            )
+        except ElevenLabsAgentServiceError as exc:
+            return Response(
+                {
+                    "error": exc.message,
+                    "details": exc.details,
+                },
+                status=exc.status_code,
+            )
+
+        fields_to_update = {
+            "voice_assistant_id": creation_result["agent_id"],
+        }
+
+        sync_warning = None
+        try:
+            agent_config = fetch_elevenlabs_agent_config(creation_result["agent_id"])
+            fields_to_update.update(
+                {
+                    "ai_prompt": agent_config["prompt"],
+                    "first_message": agent_config["first_message"],
+                }
+            )
+            if agent_config["voice_id"]:
+                fields_to_update["ai_voice"] = agent_config["voice_id"]
+            if agent_config["voice_name"]:
+                fields_to_update["voice_name"] = agent_config["voice_name"]
+        except requests.exceptions.RequestException as exc:
+            logger.exception("Failed to sync created ElevenLabs agent config")
+            sync_warning = {
+                "error": "Agent created and saved, but failed to fetch full configuration from ElevenLabs",
+                "details": str(exc),
+            }
+
+        with transaction.atomic():
+            Assistant.objects.filter(pk=assistant.pk).update(**fields_to_update)
+            for key, value in fields_to_update.items():
+                setattr(assistant, key, value)
+
+        return Response(
+            {
+                "assistant_id": assistant.id,
+                "organization_id": assistant.organization_id,
+                "agent_id": creation_result["agent_id"],
+                "prompt": assistant.ai_prompt,
+                "first_message": assistant.first_message,
+                "voice_id": assistant.ai_voice,
+                "voice_name": assistant.voice_name,
+                "raw": creation_result["raw"],
+                "warning": sync_warning,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class ElevenLabsGetShopItemToolView(APIView):

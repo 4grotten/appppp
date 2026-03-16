@@ -1,4 +1,6 @@
-from typing import Union
+import json
+import logging
+from typing import Optional, Union
 from django.db.models import Sum, Value, Q
 from django.db.models.functions import Coalesce
 from django.contrib.postgres.fields import ArrayField
@@ -27,7 +29,46 @@ from transactions.models import Transaction
 from users.models import User
 
 
+logger = logging.getLogger(__name__)
+
+
 class ShopItemService:
+    @classmethod
+    def _load_organization_catalog_json(cls, organization: Organization) -> Optional[list]:
+        """Return parsed catalog JSON list or None when file is unavailable."""
+        catalog_file = getattr(organization, "catalog_file", None)
+        if not catalog_file:
+            logger.info(
+                "[SEARCH_SOURCE] org_id=%s source=db reason=catalog_file_missing",
+                organization.id,
+            )
+            return None
+
+        try:
+            with catalog_file.open("rb") as catalog_stream:
+                payload = json.load(catalog_stream)
+        except Exception as exc:
+            logger.warning(
+                "[SEARCH_SOURCE] org_id=%s source=db reason=catalog_file_read_error error=%s",
+                organization.id,
+                exc,
+            )
+            return None
+
+        if isinstance(payload, list):
+            logger.info(
+                "[SEARCH_SOURCE] org_id=%s source=file reason=catalog_file_loaded items=%s",
+                organization.id,
+                len(payload),
+            )
+            return payload
+
+        logger.info(
+            "[SEARCH_SOURCE] org_id=%s source=file reason=invalid_catalog_format",
+            organization.id,
+        )
+        return []
+
     @classmethod
     def get(cls, **filters):
         try:
@@ -414,6 +455,10 @@ class ShopItemService:
     @classmethod
     def get_ordering_search_result(cls, queryset: QuerySet, search_word: str) -> QuerySet:
         search_word = search_word.strip()
+        logger.info(
+            "[SEARCH_SOURCE] source=db mode=direct_db_search search=%s",
+            search_word,
+        )
 
         queryset = queryset.filter(
             Q(name__icontains=search_word) |
@@ -442,6 +487,114 @@ class ShopItemService:
         )
 
         return queryset
+
+    @classmethod
+    def get_ordering_search_result_in_catalog_file(
+        cls,
+        queryset: QuerySet,
+        search_word: str,
+        organization: Organization,
+    ) -> QuerySet:
+        """
+        Search items inside organization catalog JSON file and keep API output based on DB queryset.
+        Falls back to DB search only when catalog file is unavailable.
+        """
+        search_word = search_word.strip()
+        if not search_word:
+            logger.info(
+                "[SEARCH_SOURCE] org_id=%s source=db reason=empty_search_word",
+                organization.id,
+            )
+            return queryset
+
+        catalog_items = cls._load_organization_catalog_json(organization=organization)
+        if catalog_items is None:
+            logger.info(
+                "[SEARCH_SOURCE] org_id=%s source=db reason=fallback_from_file_search search=%s",
+                organization.id,
+                search_word,
+            )
+            return cls.get_ordering_search_result(queryset=queryset, search_word=search_word)
+
+        logger.info(
+            "[SEARCH_SOURCE] org_id=%s source=file reason=search_in_catalog_json search=%s",
+            organization.id,
+            search_word,
+        )
+
+        search_lower = search_word.lower()
+        scored_ids = []
+
+        for raw_item in catalog_items:
+            if not isinstance(raw_item, dict):
+                continue
+
+            item_id = raw_item.get("id")
+            if item_id in (None, ""):
+                continue
+
+            try:
+                item_id = int(item_id)
+            except (TypeError, ValueError):
+                continue
+
+            name = str(raw_item.get("name") or "")
+            description = str(raw_item.get("description") or "")
+            article = str(raw_item.get("article") or "")
+
+            name_lower = name.lower()
+            description_lower = description.lower()
+            article_lower = article.lower()
+
+            if name_lower == search_lower:
+                rank = 1
+            elif search_lower in name_lower.split():
+                rank = 2
+            elif search_lower in name_lower:
+                rank = 3
+            elif search_lower in description_lower:
+                rank = 4
+            elif search_lower in article_lower:
+                rank = 5
+            else:
+                continue
+
+            scored_ids.append((rank, item_id))
+
+        if not scored_ids:
+            logger.info(
+                "[SEARCH_SOURCE] org_id=%s source=file result=no_matches search=%s",
+                organization.id,
+                search_word,
+            )
+            return queryset.none()
+
+        scored_ids.sort(key=lambda pair: pair[0])
+
+        ordered_ids = []
+        seen = set()
+        for _, item_id in scored_ids:
+            if item_id in seen:
+                continue
+            seen.add(item_id)
+            ordered_ids.append(item_id)
+
+        order_case = Case(
+            *[When(id=item_id, then=position) for position, item_id in enumerate(ordered_ids)],
+            default=Value(len(ordered_ids)),
+            output_field=IntegerField(),
+        )
+
+        logger.info(
+            "[SEARCH_SOURCE] org_id=%s source=file result=matched matched_count=%s search=%s",
+            organization.id,
+            len(ordered_ids),
+            search_word,
+        )
+
+        return queryset.filter(id__in=ordered_ids).annotate(file_order=order_case).order_by(
+            "file_order", "-updated_at"
+        )
 
     @classmethod
     def get_user_resumes(cls, user: User):

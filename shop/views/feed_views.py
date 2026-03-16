@@ -159,7 +159,11 @@ class OrganizationItemListView(FeedView):
         ordering_param = self.request.query_params.get('ordering')
 
         if search:
-            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
+            qs = ShopItemService.get_ordering_search_result_in_catalog_file(
+                queryset=qs,
+                search_word=search,
+                organization=organization,
+            )
        
         if not search and not ordering_param:
             qs = qs.order_by(F('pinned_at').desc(nulls_last=True), '-updated_at')

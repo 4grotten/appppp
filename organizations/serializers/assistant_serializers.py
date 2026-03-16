@@ -69,6 +69,7 @@ class AssistantCreateSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(
         required=True, queryset=Organization.objects.all()
     )
+    external_api_body = serializers.JSONField(required=False)
     external_api_methods = ExternalApiMethodsField(required=False)
 
     class Meta:
@@ -87,6 +88,7 @@ class AssistantCreateSerializer(serializers.ModelSerializer):
             "external_api_path",
             "external_api_name",
             "external_api_description",
+            "external_api_body",
             "external_api_methods",
         )
 
@@ -118,6 +120,7 @@ class AssistantSettingsUpdateSerializer(serializers.ModelSerializer):
 
 
 class AssistantExternalApiSettingsSerializer(serializers.ModelSerializer):
+    external_api_body = serializers.JSONField(required=False)
     external_api_methods = ExternalApiMethodsField(required=False)
 
     class Meta:
@@ -127,6 +130,7 @@ class AssistantExternalApiSettingsSerializer(serializers.ModelSerializer):
             "external_api_path",
             "external_api_name",
             "external_api_description",
+            "external_api_body",
             "external_api_methods",
         )
 
@@ -174,6 +178,7 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
     active_until = serializers.SerializerMethodField()
     is_enabled = serializers.BooleanField(read_only=True)
     plans = serializers.SerializerMethodField()
+    external_api_body = serializers.JSONField(required=False, read_only=True)
     external_api_methods = ExternalApiMethodsField(required=False, read_only=True)
 
     class Meta:
@@ -198,6 +203,7 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
             "external_api_path",
             "external_api_name",
             "external_api_description",
+            "external_api_body",
             "external_api_methods",
         )
         read_only_fields = ("organization",)

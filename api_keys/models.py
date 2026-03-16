@@ -199,3 +199,22 @@ class GPTAssistConfig(TimestampModel):
             GPTAssistConfig.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
 
         super().save(*args, **kwargs)
+
+
+class AWSConfig(TimestampModel):
+    access_key_id = models.CharField(max_length=255, verbose_name="AWS Access Key ID", null=True, blank=True)
+    secret_access_key = models.CharField(max_length=255, verbose_name="AWS Secret Access Key", null=True, blank=True)
+    is_active = models.BooleanField(default=False, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "AWS Config"
+        verbose_name_plural = "AWS Configs"
+
+    def __str__(self):
+        return f"AWS Config ({'Active' if self.is_active else 'Disabled'})"
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            AWSConfig.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+
+        super().save(*args, **kwargs)

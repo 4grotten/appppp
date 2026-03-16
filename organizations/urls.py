@@ -19,8 +19,13 @@ from .views.assistant_views import (
     OrganizationAssistantRetrieveUpdateView,
     PurchaseAssistantView,
     QuestionListView,
-    ToggleAssistantEnableView, GetElevenLabsSignedUrlView, AssistantSettingsUpdateView, ProxyVoicesView,
-    ElevenLabsGetShopItemToolView, GetElevenLabsPromptView
+    ToggleAssistantEnableView,
+    GetElevenLabsSignedUrlView,
+    AssistantSettingsUpdateView,
+    ProxyVoicesView,
+    ElevenLabsGetShopItemToolView,
+    GetElevenLabsPromptView,
+    CreateElevenLabsAgentView,
 )
 from .views.attendance_views import (
     AttendanceStatsView,
@@ -846,6 +851,10 @@ coupon_urls = [
     path('elevenlabs/agents/<str:agent_id>/prompt/',
          GetElevenLabsPromptView.as_view(),
          name='elevenlabs-get-prompt'),
+
+        path('assistant/<int:pk>/elevenlabs-agent/create/',
+            CreateElevenLabsAgentView.as_view(),
+            name='assistant-elevenlabs-agent-create'),
 
 
 

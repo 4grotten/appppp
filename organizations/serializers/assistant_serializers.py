@@ -86,6 +86,19 @@ class AssistantSettingsUpdateSerializer(serializers.ModelSerializer):
         return value
 
 
+class ElevenLabsAgentCreateSerializer(serializers.Serializer):
+    conversation_config = serializers.DictField(required=True)
+    name = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    tags = serializers.ListField(
+        child=serializers.CharField(max_length=64),
+        required=False,
+        allow_empty=True,
+    )
+    platform_settings = serializers.DictField(required=False)
+    workflow = serializers.DictField(required=False)
+    enable_versioning = serializers.BooleanField(required=False, default=False)
+
+
 class OrganizationAssistantAnswerCreateSerializer(serializers.ModelSerializer):
     files = serializers.PrimaryKeyRelatedField(
         queryset=AnswerFile.objects.all(), many=True, required=False

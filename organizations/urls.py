@@ -548,6 +548,16 @@ organization_urls = [
         name="org_assistant_chats",
     ),
     path(
+        "organizations/assistant/elevenlabs-agent/create/",
+        CreateElevenLabsAgentView.as_view(),
+        name="org_assistant_elevenlabs_agent_create_by_org",
+    ),
+    path(
+        "organizations/assistant/<int:pk>/elevenlabs-agent/create/",
+        CreateElevenLabsAgentView.as_view(),
+        name="org_assistant_elevenlabs_agent_create",
+    ),
+    path(
         "organizations/tariffs/",
         RegionalTariffListView.as_view(),
         name="regional-tariffs-by-country",
@@ -851,10 +861,6 @@ coupon_urls = [
     path('elevenlabs/agents/<str:agent_id>/prompt/',
          GetElevenLabsPromptView.as_view(),
          name='elevenlabs-get-prompt'),
-
-        path('assistant/<int:pk>/elevenlabs-agent/create/',
-            CreateElevenLabsAgentView.as_view(),
-            name='assistant-elevenlabs-agent-create'),
 
 
 

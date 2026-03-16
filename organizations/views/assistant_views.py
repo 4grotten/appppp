@@ -678,15 +678,7 @@ class CreateElevenLabsAgentView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ElevenLabsAgentCreateSerializer
 
-    def post(self, request, pk: int):
-        assistant = AssistantService.get(id=pk)
-
-        if not OrganizationService.user_can_edit_organization(
-            organization=assistant.organization,
-            user=request.user,
-        ):
-            raise PermissionDenied({"message": _("No rights to edit organization")})
-
+    def post(self, request, pk: Optional[int] = None):
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return Response(
@@ -698,6 +690,45 @@ class CreateElevenLabsAgentView(APIView):
             )
 
         data = serializer.validated_data
+
+        assistant = None
+        if pk is not None:
+            assistant = AssistantService.get(id=pk)
+        else:
+            organization_id = data.get("organization_id")
+            if not organization_id:
+                return Response(
+                    {
+                        "error": "organization_id is required when assistant pk is not provided",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            assistant = Assistant.objects.filter(organization_id=organization_id).first()
+            if not assistant:
+                return Response(
+                    {
+                        "error": _("Assistant not found"),
+                    },
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+        if not OrganizationService.user_can_edit_organization(
+            organization=assistant.organization,
+            user=request.user,
+        ):
+            raise PermissionDenied({"message": _("No rights to edit organization")})
+
+        if assistant.voice_assistant_id and not data.get("force_create", False):
+            return Response(
+                {
+                    "error": "Agent already exists for this assistant",
+                    "assistant_id": assistant.id,
+                    "organization_id": assistant.organization_id,
+                    "existing_agent_id": assistant.voice_assistant_id,
+                    "hint": "Use force_create=true only if you intentionally want to replace existing agent",
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
 
         try:
             creation_result = ElevenLabsAgentService.create_agent(
